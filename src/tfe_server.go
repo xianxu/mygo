@@ -26,7 +26,7 @@ func init() {
 						"True-Client-Ip": []string{"127.0.0.1",},
 					},
 					[]*tfe.TransportWithHost {
-						tfe.NewTransportWithHost("urls-real.api.twitter.com"),
+						tfe.NewTransportWithHost("localhost:8000"),
 					},
 				},
 				&tfe.PrefixRewriteRule {
