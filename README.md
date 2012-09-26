@@ -1,0 +1,4 @@
+mygo
+====
+
+Playground for go
