@@ -15,22 +15,21 @@ import (
 	"time"
 )
 
-// expose command line and memory stats. TODO: move over?
+// expose command line and memory stats. TODO: move over to gostrich so those can be viz-ed.
 import _ "expvar"
 
 var (
-	statsSingleton *statsRecord         // singleton stats
-	statsJson      *statsHttpJson       // holder for json admin endpoint
-	statsTxt       *statsHttpTxt        // holder for txt admin endpoint
-	shutdown       chan int             // send any int to shutdown admin server
-	started        int32                // whether the singleton admin service has started
-	initLock       = sync.Mutex{}
-	then           = time.Now().Unix()
+	statsSingleton *statsRecord         // singleton stats, that's "typically" what you need
+	startUpTime    = time.Now().Unix()  // start up time
 
-	// command line arguments that can be used to customize this module
+	// command line arguments that can be used to customize this module's singleton
 	adminPort      = flag.String("admin_port", "8300", "admin port")
 	jsonLineBreak  = flag.Bool("json_line_break", true, "whether break lines for json")
 )
+
+type Admin interface {
+	StartToLive() error
+}
 
 /*
  * Counter represents a thread safe way of keeping track of a single count.
@@ -49,7 +48,7 @@ type Sampler interface {
 }
 
 /*
- * One implementation of sampler
+ * One implementation of sampler, it does so by keeping track of min/max and last n items.
  */
 type sampler struct {
 	count int64
@@ -59,7 +58,9 @@ type sampler struct {
 }
 
 /*
- * The interface used to collect various stats
+ * The interface used to collect various stats. It provides counters, gauges, labels and samples.
+ * It also provides a way to scope Stats collector to a prefixed domain. All implementation should
+ * be thread safe.
  */
 type Stats interface {
 	Counter(name string) Counter
@@ -78,16 +79,23 @@ type myInt64 int64
  * will be a Stats
  */
 type statsRecord struct {
+    // Global lock's bad, user should keep references to actual collectors, such as Counters
+	// instead of doing name resolution each every time.
 	lock        sync.Mutex
+
 	counters    map[string]*int64
 	gauges      map[string]func() float64
 	labels      map[string]func() string
+
 	samplerSize int
 	statistics  map[string]Sampler
 }
 
+/*
+ * statsRecord with a scope name, it prefix all stats with this scope name.
+ */
 type scopedStatsRecord struct {
-	sr          *statsRecord
+	*statsRecord
 	scope       string
 }
 
@@ -103,13 +111,19 @@ type statsHttp struct {
 /*
  * Serves Json endpoint.
  */
-type statsHttpJson statsHttp
+type statsHttpJson struct {
+	*statsHttp
+	jsonLineBreak bool
+}
 
 /*
  * Serves Txt endpoint.
  */
 type statsHttpTxt  statsHttp
 
+/*
+ * Creates a sampler of given size
+ */
 func NewSampler(size int) Sampler {
 	return &sampler{0, make([]float64, size), math.MaxFloat64, -1 * math.MaxFloat64}
 }
@@ -127,6 +141,9 @@ func (s *sampler) Sampled() []float64 {
 	return s.cache
 }
 
+/*
+ * Create a new stats object
+ */
 func NewStats(sampleSize int) *statsRecord {
 	return &statsRecord{
 		sync.Mutex{},
@@ -197,23 +214,23 @@ func (sr *statsRecord) Scoped(name string) Stats {
 }
 
 func (ssr *scopedStatsRecord) Counter(name string) Counter {
-	return ssr.sr.Counter(ssr.scope + "/" + name)
+	return ssr.Counter(ssr.scope + "/" + name)
 }
 
 func (ssr *scopedStatsRecord) AddGauge(name string, gauge func() float64) bool {
-	return ssr.sr.AddGauge(ssr.scope + "/" + name, gauge)
+	return ssr.AddGauge(ssr.scope + "/" + name, gauge)
 }
 
 func (ssr *scopedStatsRecord) AddLabel(name string, label func() string) bool {
-	return ssr.sr.AddLabel(ssr.scope + "/" + name, label)
+	return ssr.AddLabel(ssr.scope + "/" + name, label)
 }
 func (ssr *scopedStatsRecord) Statistics(name string) Sampler {
-	return ssr.sr.Statistics(ssr.scope + "/" + name)
+	return ssr.Statistics(ssr.scope + "/" + name)
 }
 
 func (ssr *scopedStatsRecord) Scoped(name string) Stats {
 	return &scopedStatsRecord {
-		ssr.sr,
+		ssr.statsRecord,
 		ssr.scope + "/" + name,
 	}
 }
@@ -320,20 +337,20 @@ func jsonEncode(v interface{}) string {
 	return "bad_json_value"
 }
 
-func breakLines() string {
-	if *jsonLineBreak {
+func (sr *statsHttpJson) breakLines() string {
+	if sr.jsonLineBreak {
 		return "\n"
 	}
 	return ""
 }
 func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	fmt.Fprintf(w, "{" + breakLines())
+	fmt.Fprintf(w, "{" + sr.breakLines())
 	first := true
 	// counters
 	for k, v := range sr.counters {
 		if !first {
-			fmt.Fprintf(w, "," + breakLines())
+			fmt.Fprintf(w, "," + sr.breakLines())
 		}
 		first = false
 		fmt.Fprintf(w, "%v: %v", jsonEncode(k), *v)
@@ -341,7 +358,7 @@ func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// gauges
 	for k, f := range sr.gauges {
 		if !first {
-			fmt.Fprintf(w, "," + breakLines())
+			fmt.Fprintf(w, "," + sr.breakLines())
 		}
 		first = false
 		fmt.Fprintf(w, "%v: %v", jsonEncode(k), f())
@@ -349,7 +366,7 @@ func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// labels
 	for k, f := range sr.labels {
 		if !first {
-			fmt.Fprintf(w, "," + breakLines())
+			fmt.Fprintf(w, "," + sr.breakLines())
 		}
 		first = false
 		fmt.Fprintf(w, "%v: %v", jsonEncode(k), jsonEncode(f()))
@@ -359,13 +376,13 @@ func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	go sr.sortOnMultipleCPUs(sorted)
 	for v := range sorted {
 		if !first {
-			fmt.Fprintf(w, "," + breakLines())
+			fmt.Fprintf(w, "," + sr.breakLines())
 		}
 		first = false
 		fmt.Fprintf(w, "%v: ", jsonEncode(v.name))
 		sortedToJson(w, v.values)
 	}
-	fmt.Fprintf(w, breakLines() + "}" + breakLines())
+	fmt.Fprintf(w, sr.breakLines() + "}" + sr.breakLines())
 }
 
 func (sr *statsHttpTxt) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -396,44 +413,62 @@ func init() {
 
 	// some basic stats
 	statsSingleton.AddGauge("uptime", func()float64 {
-		return float64(time.Now().Unix() - then)
+		return float64(time.Now().Unix() - startUpTime)
 	})
+}
+
+type AdminError string
+func (e AdminError) Error() string {
+	return string(e)
 }
 
 /*
  * Blocks current coroutine. Call http /shutdown to shutdown.
  */
-func StartToLive() {
-	serverError := make(chan error)
+func (stats *statsRecord) StartToLive(adminPort *string, jsonLineBreak *bool) error {
 	// only start a single copy
-	if atomic.CompareAndSwapInt32(&started, 0, 1) {
-		statsHttpImpl := &statsHttp{ statsSingleton, ":" + *adminPort }
-		statsJson = (*statsHttpJson)(statsHttpImpl)
-		statsTxt = (*statsHttpTxt)(statsHttpImpl)
+	statsHttpImpl := &statsHttp{ stats, ":" + *adminPort }
+	statsJson := &statsHttpJson{ statsHttpImpl, *jsonLineBreak }
+	statsTxt := (*statsHttpTxt)(statsHttpImpl)
 
-		shutdown = make(chan int)
+	shutdown    := make(chan int)
+	serverError := make(chan error)
 
-		http.Handle("/stats.json", statsJson)
-		http.Handle("/stats.txt", statsTxt)
-		http.HandleFunc("/shutdown", func(w http.ResponseWriter, r *http.Request){
-			shutdown <- 0
-		})
+	mux := http.NewServeMux()
+	mux.Handle("/stats.json", statsJson)
+	mux.Handle("/stats.txt", statsTxt)
+	mux.HandleFunc("/shutdown", func(w http.ResponseWriter, r *http.Request){
+		shutdown <- 0
+	})
 
-		go func() {
-			serverError <- http.ListenAndServe(statsHttpImpl.address, nil)
-		}()
-
-		select {
-		case er := <-serverError:
-			fmt.Println("Can't start up server, error was: " + er.Error())
-		case <-shutdown:
-			fmt.Println("Shutdown requested")
-		}
+	server := http.Server {
+		statsHttpImpl.address,
+		mux,
+		18 * time.Second,
+		10 * time.Second,
+		0,
+		nil,
 	}
+
+	go func() {
+		serverError <- server.ListenAndServe()
+	}()
+
+	select {
+	case er := <-serverError:
+		return AdminError("Can't start up server, error was: " + er.Error())
+	case <-shutdown:
+		fmt.Println("Shutdown requested")
+	}
+	return nil
+}
+
+func StartToLive() error {
+	return statsSingleton.StartToLive(adminPort, jsonLineBreak)
 }
 
 /*
- * Some random test code, not sure where to put them yet.
+* Some random test code, not sure where to put them yet. TODO: real tests
  */
 func test() {
 	flag.Parse()
@@ -468,5 +503,5 @@ func test() {
 	ms1 := ms.Scoped("client1")
 	ms1.Counter("requests").Incr(1)
 
-	StartToLive()
+	stats.StartToLive(adminPort, jsonLineBreak)
 }
