@@ -310,45 +310,48 @@ func sortedToTxt(w http.ResponseWriter, array []float64) {
 	fmt.Fprintf(w, ")")
 }
 
-func (sr *statsRecord) cloneStats() {
+func (sr *statsRecord) cloneAll() {
+	sr.lock.Lock()
+	defer sr.lock.Unlock()
+
 	//TODO:
 	//  - actually copy, note there's no need to lock, if we can tolerate a bit inaccuracy in
 	//    stats, such as max is not really max, but it's large enough typically.
 	//  - maintain a single buffer of copied values
 	//  - let's do single threaded operation for easier buffer management
+
+	for k, v := range sr.statistics {
+		if vv, ok := sr.clonedStats[k]; ok {
+			vv.count = v.count
+			vv.min = v.min
+			vv.max = v.max
+			vv.length = v.length
+			for i, a := range v.cache {
+				vv.cache[i] = a
+			}
+		} else {
+			c := make([]float64, v.length)
+			for i, a := range v.cache {
+				c[i] = a
+			}
+			sr.clonedStats[k] = &sampler{
+				v.count,
+				c,
+				v.min,
+				v.max,
+				v.length,
+			}
+		}
+	}
 }
 
-/*
- * Kicks off sorting of sampled data on collection on multiple CPUs.
- */
-func (sr *statsRecord) sortOnMultipleCPUs(sorted chan sortedValues) {
-	//TODO: update to do single thread sorting, doesn't make much case to sort fast,
-	//      there's no point and it complicates buffer management.
-	sr.cloneStats()
-
-	numItems := len(sr.statistics)
-	if numItems == 0 {
-		close(sorted)
-		return
-	}
-	done := make(chan int)
-
-	for k, v := range sr.clonedStats {
-		go func(k string, v Sampler) {
-			fmt.Println("sort.. " + k)
-			sampled := v.Sampled()
-			sort.Float64s(sampled)
-			sorted <- sortedValues{k, sampled}
-			done <- 1
-		} (k, v)
-	}
-
-	for x := range done {
-		fmt.Println("sort counted.. ")
-		numItems -= x
-		if numItems == 0 {
-			close(sorted)
+func (sr *statsRecord) sortAll() {
+	for _, v := range sr.clonedStats {
+        toSort := v.cache
+		if v.count < int64(v.length) {
+			toSort = v.cache[0:int(v.count)]
 		}
+		sort.Float64s(toSort)
 	}
 }
 
@@ -399,17 +402,21 @@ func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println(4)
 	// stats
-	sorted := make(chan sortedValues)
-	go sr.sortOnMultipleCPUs(sorted)
-	for v := range sorted {
-		if len(v.values) > 0 {
+	sr.cloneAll()
+	sr.sortAll()
+	for k, v := range sr.clonedStats {
+		if v.count > 0 {
 			fmt.Println("sort collected")
 			if !first {
 				fmt.Fprintf(w, "," + sr.breakLines())
 			}
 			first = false
-			fmt.Fprintf(w, "%v: ", jsonEncode(v.name))
-			sortedToJson(w, v.values)
+			fmt.Fprintf(w, "%v: ", jsonEncode(k))
+			vv := v.cache
+			if v.count < int64(v.length) {
+				vv = v.cache[0:int(v.count)]
+			}
+			sortedToJson(w, vv)
 			fmt.Fprintf(w, "\n")
 		}
 	}
@@ -431,13 +438,17 @@ func (sr *statsHttpTxt) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "%v: %v\n", k, f())
 	}
 	// stats
-	sorted := make(chan sortedValues)
-	go sr.sortOnMultipleCPUs(sorted)
-	for v := range sorted {
-		fmt.Printf("sort collected: len %v\n", len(v.values))
-		if len(v.values) > 0 {
-			fmt.Fprintf(w, "%v: ", v.name)
-			sortedToTxt(w, v.values)
+	sr.cloneAll()
+	sr.sortAll()
+	for k, v := range sr.clonedStats {
+		fmt.Printf("sort collected: len %v\n", v.count)
+		if v.count > 0 {
+			fmt.Fprintf(w, "%v: ", k)
+			vv := v.cache
+			if v.count < int64(v.length) {
+				vv = v.cache[0:int(v.count)]
+			}
+			sortedToTxt(w, vv)
 			fmt.Fprintf(w, "\n")
 		}
 	}
