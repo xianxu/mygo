@@ -176,6 +176,7 @@ func NewStats(sampleSize int) *statsRecord {
 func (sr *statsRecord) Counter(name string) Counter {
 	sr.lock.RLock()
 	if v, ok := sr.counters[name]; ok {
+		sr.lock.RUnlock()
 		return (*myInt64)(v)
 	}
 	sr.lock.RUnlock()
@@ -196,6 +197,7 @@ func (sr *statsRecord) Counter(name string) Counter {
 func (sr *statsRecord) AddGauge(name string, gauge func() float64) bool {
 	sr.lock.RLock()
 	if _, ok := sr.gauges[name]; ok {
+		sr.lock.RUnlock()
 		return false
 	}
 	sr.lock.RUnlock()
@@ -214,6 +216,7 @@ func (sr *statsRecord) AddGauge(name string, gauge func() float64) bool {
 func (sr *statsRecord) AddLabel(name string, label func() string) bool {
 	sr.lock.RLock()
 	if _, ok := sr.labels[name]; ok {
+		sr.lock.RUnlock()
 		return false
 	}
 	sr.lock.RUnlock()
@@ -232,6 +235,7 @@ func (sr *statsRecord) AddLabel(name string, label func() string) bool {
 func (sr *statsRecord) Statistics(name string) IntSampler {
 	sr.lock.RLock()
 	if v, ok := sr.statistics[name]; ok {
+		sr.lock.RUnlock()
 		return (v)
 	}
 	sr.lock.RUnlock()
