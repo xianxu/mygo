@@ -13,6 +13,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"code.google.com/p/log4go"
 )
 
 // expose command line and memory stats. TODO: move over to gostrich so those can be viz-ed.
@@ -379,11 +381,10 @@ func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	sr.lock.RLock()
 	defer sr.lock.RUnlock()
 
-	fmt.Println("admin serving http")
+	log4go.Debug("Admin serving http")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	fmt.Fprintf(w, "{" + sr.breakLines())
 	first := true
-	fmt.Println(1)
 	// counters
 	for k, v := range sr.counters {
 		if !first {
@@ -392,7 +393,6 @@ func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		first = false
 		fmt.Fprintf(w, "%v: %v", jsonEncode(k), *v)
 	}
-	fmt.Println(2)
 	// gauges
 	for k, f := range sr.gauges {
 		if !first {
@@ -401,7 +401,6 @@ func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		first = false
 		fmt.Fprintf(w, "%v: %v", jsonEncode(k), f())
 	}
-	fmt.Println(3)
 	// labels
 	for k, f := range sr.labels {
 		if !first {
@@ -410,12 +409,10 @@ func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		first = false
 		fmt.Fprintf(w, "%v: %v", jsonEncode(k), jsonEncode(f()))
 	}
-	fmt.Println(4)
 	// stats
 	for k, v := range sr.statistics {
 		count, sum, vv := freezeAndSort(v)
 		if count > 0 {
-			fmt.Println("sort collected")
 			if !first {
 				fmt.Fprintf(w, "," + sr.breakLines())
 			}
@@ -504,7 +501,7 @@ func (stats *statsRecord) StartToLive(adminPort *string, jsonLineBreak *bool) er
 	case er := <-serverError:
 		return AdminError("Can't start up server, error was: " + er.Error())
 	case <-shutdown:
-		fmt.Println("Shutdown requested")
+		log4go.Info("Shutdown requested")
 	}
 	return nil
 }

@@ -6,7 +6,6 @@ package tfe
 import (
 	"gostrich"
 
-	"fmt"
 	"io"
 	"net/http"
 	"net/url"
@@ -14,6 +13,8 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+
+	"code.google.com/p/log4go"
 )
 
 var (
@@ -364,7 +365,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				client := rule.TransformRequest(r)
 
 				if client == nil {
-					fmt.Println("No client is available")
+					log4go.Warn("No client is available to handle request %v\n", *r)
 					w.WriteHeader(503)
 					return
 				}
@@ -373,7 +374,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if err != nil {
-				fmt.Println("Error occurred while proxying: " + err.Error())
+				log4go.Warn("Error occurred while proxying: %v\n", err.Error())
 				w.WriteHeader(503)
 				return
 			}
@@ -396,7 +397,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			// log error while copying
 			if err != nil {
-				fmt.Printf("err while reading: %v\n", err)
+				log4go.Warn("err while piping bytes: %v\n", err)
 			}
 
 			return

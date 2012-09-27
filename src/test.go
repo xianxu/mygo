@@ -1,14 +1,12 @@
 package main
 
 import (
-	/*"fmt"*/
-	"unsafe"
-	"sync/atomic"
+	"fmt"
 )
 
 func main() {
-	a := 1
-	b := &a
-	c := 2
-	atomic.StorePointer(&(unsafe.Pointer)(&b), &c)
+	a := map[string]string { "a": "a" }
+	b := map[string]string { "b": "b" }
+
+	fmt.Printf("%v", a + b)
 }
