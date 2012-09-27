@@ -24,9 +24,9 @@ var (
 func main() {
 	flag.Parse()
 	log4go.Info("Starting TFE")
-	theTfe := &tfe.Tfe{ tfe.GetRules(*conf)() }
+	theTfe := &tfe.Tfe{tfe.GetRules(*conf)()}
 	for binding, rules := range theTfe.BindingToRules {
-		server := http.Server {
+		server := http.Server{
 			binding,
 			&rules,
 			10 * time.Second,

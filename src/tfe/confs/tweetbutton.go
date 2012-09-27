@@ -8,17 +8,17 @@ import (
 
 func init() {
 	ok := tfe.AddRules("tweetbutton-smf1", func() map[string]tfe.Rules {
-		return map[string]tfe.Rules {
-			":8888": tfe.Rules {
+		return map[string]tfe.Rules{
+			":8888": tfe.Rules{
 				tfe.NewPrefixRule(
 					tfe.RuleName("tweetbutton-prod"),
 					tfe.RequestHost(""),
 					tfe.RequestPrefix("/1/urls/"),
 					tfe.ProxiedPrefix("/1/urls/"),
-					map[string][]string {
-						"True-Client-Ip": []string{"127.0.0.1",},
+					map[string][]string{
+						"True-Client-Ip": []string{"127.0.0.1"},
 					},
-					[]*tfe.TransportWithHost {
+					[]*tfe.TransportWithHost{
 						tfe.NewTransportWithHost("smf1-aea-35-sr2:8000", tfe.MaxIdleConnsPerHost(10)),
 						tfe.NewTransportWithHost("smf1-adz-03-sr3:8000", tfe.MaxIdleConnsPerHost(10)),
 						tfe.NewTransportWithHost("smf1-adj-27-sr4:8000", tfe.MaxIdleConnsPerHost(10)),
@@ -30,7 +30,7 @@ func init() {
 						tfe.NewTransportWithHost("smf1-aer-19-sr4:8000", tfe.MaxIdleConnsPerHost(10)),
 					},
 					tfe.Retries(1),
-					tfe.Timeout(3 * time.Second),
+					tfe.Timeout(3*time.Second),
 				),
 			},
 		}

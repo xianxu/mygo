@@ -5,7 +5,7 @@ import (
 )
 
 var (
-	confs map[string] func() map[string]Rules
+	confs map[string]func() map[string]Rules
 )
 
 /*
@@ -17,14 +17,14 @@ func GetRules(name string) func() map[string]Rules {
 		names[i] = strings.TrimSpace(v)
 	}
 	if confs == nil {
-		confs = make(map[string] func() map[string]Rules)
+		confs = make(map[string]func() map[string]Rules)
 		return nil
 	}
 	return func() map[string]Rules {
 		result := make(map[string]Rules)
 		for _, n := range names {
 			rules := confs[n]()
-			for port, r := range rules{
+			for port, r := range rules {
 				if rs, ok := result[port]; ok {
 					//TODO: duplication detection
 					result[port] = append([]Rule(rs), []Rule(r)...)
@@ -39,7 +39,7 @@ func GetRules(name string) func() map[string]Rules {
 
 func AddRules(name string, rules func() map[string]Rules) bool {
 	if confs == nil {
-		confs = make(map[string] func() map[string]Rules)
+		confs = make(map[string]func() map[string]Rules)
 	}
 	if _, ok := confs[name]; ok {
 		return false
