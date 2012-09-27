@@ -11,8 +11,8 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
-	"sync/atomic"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -20,6 +20,7 @@ var (
 	TfeTimeout = TfeError("timeout")
 )
 
+// bunch of alias to make rule writing more descriptive
 type RuleName            string
 type RequestHost         string
 type RequestPrefix       string
@@ -41,14 +42,20 @@ type Rules []Rule
 * a list of rules.
 */
 type Tfe struct {
+	// Note: rules can't be added dynamically for now.
 	BindingToRules map[string]Rules
 }
 
 /*
-* A routing rule means three things:
+* A routing rule encapsulates routes to a service, it provides three things:
 *   - to determine whether a rule can be applied to a given request
 *   - to transform request before forwarding to downstream
 *   - to transform response before replying upstream
+*
+* And then it provides some configuration values on a per service level, such as how
+* many times to retry for transport failures and what's the timeout for that service.
+*
+* It also provides a way to report stats on the service.
 */
 type Rule interface {
 	// whether this rule handles this request
@@ -81,60 +88,56 @@ const (
 )
 
 /*
-* Keep tracks of host, connection pool for each host and latency history. Will do meaningful
-* balancing later but for now we'd just round robin.
+* Keep tracks of host, connection pool for each host and latency history. Such information's
+* used for load balancing.
 */
 type TransportWithHost struct {
 	hostPort      string
 	transport     http.Transport
-	latencies     gostrich.Sampler  // keeps track of host latency
+	latencies     gostrich.IntSampler  // keeps track of host latency, in micro seconds
 
-	status        NodeStatus        // mutable field
-	flaky	      float64           // what's average latency to be considered flaky in millisecond
-	dead          float64           // what's average latency to be considered dead in millisecond
-	proberRunning int32             // whether there's a prober started already
+	status        NodeStatus           // mutable field
+
+	flaky	      float64              // what's average latency to be considered flaky in micro
+	dead          float64              // what's average latency to be considered dead in micro
+
+	proberRunning int32                // whether there's a prober started already
     gatherStats   func(*http.Request, *http.Response, error, int)
 }
 
-//TODO: we will need to tweak numbers, only keeping track of 10 seems too reactive?
-//
-// Make a new host with construct to keep track of its health. Internally we keep last 10 call's
-// latency and treat failures as taking 10 seconds. This means a single error will make average
-// latency greater than 1 second. If we want to react to 5 errors out of last 10 requests, we'd
-// set flaky to 5000 and dead to 10000, probably.
-//
-// if keeping track of 100 points, 10% bad to react, means to react if average > 1 sec. to be viewed
-// as dead, require 95% failures. In flaky mode, with or without prober, when downstream becomes
-// healthy, we'd discover it. in dead mode though, prober's needed to bring it back. at 95% mark
+// Since we treat failures as latency 10 second, if keeping track of 100 points, 
+// 10% bad to react, means to react if average > 1 sec. To be viewed as dead,
+// require 95% failures. In flaky mode, with or without prober, when downstream becomes
+// healthy, we'd discover it. In dead mode though, prober's needed to bring it back. At 95% mark
 // dead rate, it takes about 5 success probes to bring server back to flaky state. From there, 
 // recovery should be fast.
 func NewTransportWithHost(host string, hl MaxIdleConnsPerHost) *TransportWithHost {
 	return &TransportWithHost {
 		host,
 		http.Transport{ MaxIdleConnsPerHost: int(hl) },            // transport to use
-		gostrich.NewSampler(100),
+		gostrich.NewIntSampler(100),
 		NODE_ALIVE,
 		1000 * 1000,
 		9500 * 1000,
 		0,
-		nil, //gatherRequestStats(gostrich.StatsSingleton.Scoped(tfeLastRuleName).Scoped(host)),
+		nil,
 	}
 }
 /*
 * Simple rule implementation that allows filter based on Host/port and resource prefix.
 */
-type PrefixRewriteRule struct {
-	Name                 string
+type prefixRewriteRule struct {
+	name                 string
 	// transformation rules
-	SourceHost           string        // "" matches all
-	SourcePathPrefix     string
-	ProxiedPathPrefix    string
-	ProxiedAttachHeaders map[string][]string
+	sourceHost           string        // "" matches all
+	sourcePathPrefix     string
+	proxiedPathPrefix    string
+	proxiedAttachHeaders map[string][]string
 
 	// clients to use
-	Clients              []*TransportWithHost
-	ClientRetries        int
-	ClientTimeout        time.Duration
+	clients              []*TransportWithHost
+	clientRetries        int
+	clientTimeout        time.Duration
 
 	// internals
 	clientsLock          sync.RWMutex  // guards mutation to Clients field.
@@ -144,7 +147,6 @@ type PrefixRewriteRule struct {
 }
 
 func gatherRequestStats(stats gostrich.Stats) func(*http.Request, *http.Response, error, int) {
-	fmt.Println("DEB: setting up stats gathering")
 	counterReq  := stats.Counter("req")
 	counterSucc := stats.Counter("req/success")
 	counterFail := stats.Counter("req/fail")
@@ -158,7 +160,6 @@ func gatherRequestStats(stats gostrich.Stats) func(*http.Request, *http.Response
 	counterRst  := stats.Counter("rsp/rst")
 
 	return func(req *http.Request, rsp *http.Response, err error, micro int) {
-		fmt.Println("Gathering stats")
 		counterReq.Incr(1)
 		if err != nil {
 			counterFail.Incr(1)
@@ -180,7 +181,7 @@ func gatherRequestStats(stats gostrich.Stats) func(*http.Request, *http.Response
 				counterRst.Incr(1)
 			}
 		}
-		LatencyStat.Observe(float64(micro))
+		LatencyStat.Observe(micro)
 	}
 }
 
@@ -192,14 +193,14 @@ func NewPrefixRule(
 	pah map[string][]string,
 	c []*TransportWithHost,
 	r Retries,
-	to Timeout) *PrefixRewriteRule {
+	to Timeout) *prefixRewriteRule {
 	for _, t := range c {
 		if t.gatherStats == nil {
 			t.gatherStats = gatherRequestStats(
-				gostrich.StatsSingleton.Scoped(string(rn)).Scoped(t.hostPort))
+				gostrich.StatsSingleton().Scoped(string(rn)).Scoped(t.hostPort))
 		}
 	}
-	return &PrefixRewriteRule {
+	return &prefixRewriteRule {
 		string(rn),
 		string(rh),
 		string(rp),
@@ -209,61 +210,61 @@ func NewPrefixRule(
 		int(r),
 		time.Duration(to),
 		sync.RWMutex{},
-		gatherRequestStats(gostrich.StatsSingleton.Scoped(string(rn))),
+		gatherRequestStats(gostrich.StatsSingleton().Scoped(string(rn))),
 	}
 }
 
-func (p *PrefixRewriteRule) HandlesRequest(r *http.Request) bool {
-	return (p.SourceHost == "" || p.SourceHost == r.Host) &&
-		strings.HasPrefix(r.URL.Path, p.SourcePathPrefix)
+func (p *prefixRewriteRule) HandlesRequest(r *http.Request) bool {
+	return (p.sourceHost == "" || p.sourceHost == r.Host) &&
+		strings.HasPrefix(r.URL.Path, p.sourcePathPrefix)
 }
 
-func (p *PrefixRewriteRule) TransformRequest(r *http.Request) *TransportWithHost {
+func (p *prefixRewriteRule) TransformRequest(r *http.Request) *TransportWithHost {
 	p.clientsLock.RLock()
 	defer p.clientsLock.RUnlock()
 
-	if len(p.Clients) == 0 {
+	if len(p.clients) == 0 {
 		return nil
 	}
 
 	// pick one random
-	client := p.Clients[time.Now().Nanosecond()%len(p.Clients)]
+	client := p.clients[time.Now().Nanosecond()%len(p.clients)]
 
 	// adjust the pick by the healthiness of the node
 	for retries := 0; atomic.LoadInt32((*int32)(&client.status)) > int32(retries); retries += 1 {
-		client = p.Clients[time.Now().Nanosecond()%len(p.Clients)]
+		client = p.clients[time.Now().Nanosecond()%len(p.clients)]
 	}
 	r.URL = &url.URL {
 		"http",  //TODO: shit why this is not set?
 		r.URL.Opaque,
 		r.URL.User,
 		client.hostPort,
-		p.ProxiedPathPrefix + r.URL.Path[len(p.SourcePathPrefix):len(r.URL.Path)],
+		p.proxiedPathPrefix + r.URL.Path[len(p.sourcePathPrefix):len(r.URL.Path)],
 		r.URL.RawQuery,
 		r.URL.Fragment,
 	}
 	r.Host = client.hostPort
 	r.RequestURI = ""
-	for k, v := range p.ProxiedAttachHeaders {
+	for k, v := range p.proxiedAttachHeaders {
 		r.Header[k] = v
 	}
 	return client
 }
 
-func (p *PrefixRewriteRule) TransformResponse(rsp *http.Response) {
+func (p *prefixRewriteRule) TransformResponse(rsp *http.Response) {
 	//TODO
 	return
 }
 
-func (p *PrefixRewriteRule) GetClientRetries() int {
-	return p.ClientRetries
+func (p *prefixRewriteRule) GetClientRetries() int {
+	return p.clientRetries
 }
 
-func (p *PrefixRewriteRule) GetClientTimeout() time.Duration {
-	return p.ClientTimeout
+func (p *prefixRewriteRule) GetClientTimeout() time.Duration {
+	return p.clientTimeout
 }
 
-func (p *PrefixRewriteRule) GatherStats() func(*http.Request, *http.Response, error, int) {
+func (p *prefixRewriteRule) GatherStats() func(*http.Request, *http.Response, error, int) {
 	return p.gatherStats
 }
 
@@ -271,13 +272,13 @@ func (p *TransportWithHost) GatherStats() func(*http.Request, *http.Response, er
 	return p.gatherStats
 }
 
-type float64Slice []float64
-func (ns float64Slice) average() float64 {
+type intSlice []int
+func (ns intSlice) average() float64 {
 	sum := 0.0
 	for _, v := range ns {
-		sum += v
+		sum += float64(v)
 	}
-	return sum / float64(len(ns))
+	return float64(sum) / float64(len(ns))
 }
 
 type responseAndError struct {
@@ -321,8 +322,8 @@ func requestWithProber(
 		latency = 10 * 1000000
 	}
 
-	client.latencies.Observe(float64(latency))
-	avg := float64Slice(client.latencies.Sampled()).average()
+	client.latencies.Observe(latency)
+	avg := intSlice(client.latencies.Sampled()).average()
 
 	// change client state
 	switch {
@@ -346,9 +347,6 @@ func requestWithProber(
 	default:
 		atomic.StoreInt32((*int32)(&client.status), int32(NODE_ALIVE))
 	}
-	fmt.Printf("Client status is: %v\n", client.status)
-	fmt.Printf("Latencies avg: %v\n", avg)
-	fmt.Printf("%v", client.latencies.Sampled())
 
 	return
 }
@@ -356,7 +354,6 @@ func requestWithProber(
 func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, rule := range ([]Rule)(*rs) {
 		if rule.HandlesRequest(r) {
-			fmt.Print("Routes detected\n")
 
 			var rsp *http.Response
 			var err error
@@ -371,11 +368,6 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					w.WriteHeader(503)
 					return
 				}
-
-				fmt.Print(fmt.Sprintf("And host's transformed to %v\n", r.URL.Host))
-				fmt.Print(fmt.Sprintf("And path's transformed to %v\n", r.URL.Path))
-				fmt.Print(fmt.Sprintf("And header's transformed to %v\n", r.Header))
-				fmt.Print(fmt.Sprintf("%v\n", r))
 
 				rsp, err = requestWithProber(rule, client, r, rule.GetClientTimeout())
 			}
@@ -400,10 +392,9 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 
 			// 2XX with body
-			bytes, err := io.Copy(w, rsp.Body)
+			_, err = io.Copy(w, rsp.Body)
 
 			// log error while copying
-			fmt.Printf("%v bytes moved\n", bytes)
 			if err != nil {
 				fmt.Printf("err while reading: %v\n", err)
 			}

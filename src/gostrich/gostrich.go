@@ -19,16 +19,19 @@ import (
 import _ "expvar"
 
 var (
-	StatsSingleton *statsRecord         // singleton stats, that's "typically" what you need
+	statsSingletonLock = sync.Mutex{}
+	statsSingleton *statsRecord         // singleton stats, that's "typically" what you need
 	startUpTime    = time.Now().Unix()  // start up time
 
 	// command line arguments that can be used to customize this module's singleton
-	adminPort      = flag.String("admin_port", "8300", "admin port")
-	jsonLineBreak  = flag.Bool("json_line_break", true, "whether break lines for json")
+	adminPort       = flag.String("admin_port", "8300", "admin port")
+	jsonLineBreak   = flag.Bool("json_line_break", true, "whether break lines for json")
+	statsSampleSize = flag.Int("stats_sample_size", 1001, "how many samples to keep for stats")
 )
 
 type Admin interface {
 	StartToLive() error
+	GetStats() Stats
 }
 
 /*
@@ -42,20 +45,26 @@ type Counter interface {
 /*
  * Sampler maintains a sample of input stream of numbers.
  */
-type Sampler interface {
-	Observe(f float64)
-	Sampled() []float64
+type IntSampler interface {
+	Observe(f int)
+	Sampled() []int
 }
 
 /*
- * One implementation of sampler, it does so by keeping track of min/max and last n items.
+ * One implementation of sampler, it does so by keeping track of last n items. It also keeps
+ * track of overall count and sum, so historical average can be calculated.
  */
-type sampler struct {
+type intSampler struct {
+	// historical
 	count  int64
-	cache  []float64
-	min    float64
-	max    float64
+	sum    int64
 	length int
+
+	// thread safe buffer
+	cache  []int
+
+	// cloned cache's used to do stats reporting, where we need to sort the content of cache.
+	clonedCache []int
 }
 
 /*
@@ -67,7 +76,7 @@ type Stats interface {
 	Counter(name string) Counter
 	AddGauge(name string, gauge func() float64) bool
 	AddLabel(name string, label func() string) bool
-	Statistics(name string) Sampler
+	Statistics(name string) IntSampler
 	Scoped(name string) Stats
 }
 
@@ -82,18 +91,14 @@ type myInt64 int64
 type statsRecord struct {
     // Global lock's bad, user should keep references to actual collectors, such as Counters
 	// instead of doing name resolution each every time.
-	lock        sync.Mutex
+	lock        sync.RWMutex
 
 	counters    map[string]*int64
 	gauges      map[string]func() float64
 	labels      map[string]func() string
 
-	samplerSize int
-	statistics  map[string]*sampler
-
-	// stats are periodically cloned here so that they can be sorted and such without locking.
-	// TODO: finish
-	clonedStats map[string]*sampler
+	samplerSize int // val
+	statistics  map[string]*intSampler
 }
 
 /*
@@ -128,16 +133,23 @@ type statsHttpTxt  statsHttp
 /*
  * Creates a sampler of given size
  */
-func NewSampler(size int) *sampler {
-	return &sampler{0, make([]float64, size), math.MaxFloat64, -1 * math.MaxFloat64, size}
+func NewIntSampler(size int) *intSampler {
+	return &intSampler {
+		0,
+		0,
+		size,
+		make([]int, size),
+		make([]int, size),
+	}
 }
 
-func (s *sampler) Observe(f float64) {
+func (s *intSampler) Observe(f int) {
 	count := atomic.AddInt64(&(s.count), 1)
+	atomic.AddInt64(&(s.sum), int64(f))
 	s.cache[int((count - 1) % int64(s.length))] = f
 }
 
-func (s *sampler) Sampled() []float64 {
+func (s *intSampler) Sampled() []int {
 	n := s.count
 	if n < int64(s.length) {
 		return s.cache[0:n]
@@ -150,17 +162,22 @@ func (s *sampler) Sampled() []float64 {
  */
 func NewStats(sampleSize int) *statsRecord {
 	return &statsRecord{
-		sync.Mutex{},
+		sync.RWMutex{},
 		make(map[string]*int64),
 		make(map[string]func() float64),
 		make(map[string]func() string),
 		sampleSize,
-		make(map[string]*sampler),
-		make(map[string]*sampler),
+		make(map[string]*intSampler),
 	}
 }
 
 func (sr *statsRecord) Counter(name string) Counter {
+	sr.lock.RLock()
+	if v, ok := sr.counters[name]; ok {
+			return (*myInt64)(v)
+	}
+	sr.lock.RUnlock()
+
 	sr.lock.Lock()
 	defer sr.lock.Unlock()
 
@@ -175,6 +192,12 @@ func (sr *statsRecord) Counter(name string) Counter {
 }
 
 func (sr *statsRecord) AddGauge(name string, gauge func() float64) bool {
+	sr.lock.RLock()
+	if _, ok := sr.gauges[name]; ok {
+		return false
+	}
+	sr.lock.RUnlock()
+
 	sr.lock.Lock()
 	defer sr.lock.Unlock()
 
@@ -187,6 +210,12 @@ func (sr *statsRecord) AddGauge(name string, gauge func() float64) bool {
 }
 
 func (sr *statsRecord) AddLabel(name string, label func() string) bool {
+	sr.lock.RLock()
+	if _, ok := sr.labels[name]; ok {
+		return false
+	}
+	sr.lock.RUnlock()
+
 	sr.lock.Lock()
 	defer sr.lock.Unlock()
 
@@ -198,8 +227,13 @@ func (sr *statsRecord) AddLabel(name string, label func() string) bool {
 	return true
 }
 
-func (sr *statsRecord) Statistics(name string) Sampler {
-	fmt.Printf("There are %v stats before adding %v\n", len(sr.statistics), name)
+func (sr *statsRecord) Statistics(name string) IntSampler {
+	sr.lock.RLock()
+	if v, ok := sr.statistics[name]; ok {
+		return (v)
+	}
+	sr.lock.RUnlock()
+
 	sr.lock.Lock()
 	defer sr.lock.Unlock()
 
@@ -207,7 +241,7 @@ func (sr *statsRecord) Statistics(name string) Sampler {
 		return (v)
 	}
 
-	vv := NewSampler(sr.samplerSize)
+	vv := NewIntSampler(sr.samplerSize)
 	sr.statistics[name] = vv
 	return vv
 }
@@ -230,7 +264,7 @@ func (ssr *scopedStatsRecord) AddGauge(name string, gauge func() float64) bool {
 func (ssr *scopedStatsRecord) AddLabel(name string, label func() string) bool {
 	return ssr.base.AddLabel(ssr.scope + "/" + name, label)
 }
-func (ssr *scopedStatsRecord) Statistics(name string) Sampler {
+func (ssr *scopedStatsRecord) Statistics(name string) IntSampler {
 	return ssr.base.Statistics(ssr.scope + "/" + name)
 }
 
@@ -257,18 +291,17 @@ type sortedValues struct {
 /*
  * Output a sorted array of float64 as percentile in Json format.
  */
-func sortedToJson(w http.ResponseWriter, array []float64) {
+func sortedToJson(w http.ResponseWriter, array []int, count int64, sum int64) {
 	fmt.Fprintf(w, "{")
 	length := len(array)
 	l1 := length - 1
 	if length > 0 {
-		fmt.Fprintf(w, "\"count\":%v,",length)
-		sum := 0.0
-		for _, v := range array {
-			sum += v
-		}
+		// historical
+		fmt.Fprintf(w, "\"count\":%v,", count)
 		fmt.Fprintf(w, "\"sum\":%v,",sum)
-		fmt.Fprintf(w, "\"average\":%v,",sum/float64(length))
+		fmt.Fprintf(w, "\"average\":%v,",float64(sum)/float64(count))
+
+		// percentile
 		fmt.Fprintf(w, "\"minimum\":%v,",array[0])
 		fmt.Fprintf(w, "\"p25\":%v,",array[int(math.Min(0.25 * float64(length), float64(l1)))])
 		fmt.Fprintf(w, "\"p50\":%v,",array[int(math.Min(0.50 * float64(length), float64(l1)))])
@@ -276,7 +309,6 @@ func sortedToJson(w http.ResponseWriter, array []float64) {
 		fmt.Fprintf(w, "\"p90\":%v,",array[int(math.Min(0.90 * float64(length), float64(l1)))])
 		fmt.Fprintf(w, "\"p99\":%v,",array[int(math.Min(0.99 * float64(length), float64(l1)))])
 		fmt.Fprintf(w, "\"p999\":%v,",array[int(math.Min(0.999 * float64(length), float64(l1)))])
-
 		fmt.Fprintf(w, "\"maximum\":%v",array[l1])
 	}
 	fmt.Fprintf(w, "}")
@@ -285,18 +317,17 @@ func sortedToJson(w http.ResponseWriter, array []float64) {
 /*
  * Output a sorted array of float64 as percentile in text format.
  */
-func sortedToTxt(w http.ResponseWriter, array []float64) {
+func sortedToTxt(w http.ResponseWriter, array []int, count int64, sum int64) {
 	length := len(array)
 	l1 := length - 1
 	fmt.Fprintf(w, "(")
 	if length > 0 {
-		fmt.Fprintf(w, "count=%v, ",length)
-		sum := 0.0
-		for _, v := range array {
-			sum += v
-		}
+		// historical
+		fmt.Fprintf(w, "count=%v, ", count)
 		fmt.Fprintf(w, "sum=%v, ",sum)
-		fmt.Fprintf(w, "average=%v, ",sum/float64(length))
+		fmt.Fprintf(w, "average=%v, ",float64(sum)/float64(count))
+
+		// percentile
 		fmt.Fprintf(w, "minimum=%v, ",array[0])
 		fmt.Fprintf(w, "p25=%v, ",array[int(math.Min(0.25 * float64(length), float64(l1)))])
 		fmt.Fprintf(w, "p50=%v, ",array[int(math.Min(0.50 * float64(length), float64(l1)))])
@@ -308,51 +339,6 @@ func sortedToTxt(w http.ResponseWriter, array []float64) {
 		fmt.Fprintf(w, "maximum=%v",array[l1])
 	}
 	fmt.Fprintf(w, ")")
-}
-
-func (sr *statsRecord) cloneAll() {
-	sr.lock.Lock()
-	defer sr.lock.Unlock()
-
-	//TODO:
-	//  - actually copy, note there's no need to lock, if we can tolerate a bit inaccuracy in
-	//    stats, such as max is not really max, but it's large enough typically.
-	//  - maintain a single buffer of copied values
-	//  - let's do single threaded operation for easier buffer management
-
-	for k, v := range sr.statistics {
-		if vv, ok := sr.clonedStats[k]; ok {
-			vv.count = v.count
-			vv.min = v.min
-			vv.max = v.max
-			vv.length = v.length
-			for i, a := range v.cache {
-				vv.cache[i] = a
-			}
-		} else {
-			c := make([]float64, v.length)
-			for i, a := range v.cache {
-				c[i] = a
-			}
-			sr.clonedStats[k] = &sampler{
-				v.count,
-				c,
-				v.min,
-				v.max,
-				v.length,
-			}
-		}
-	}
-}
-
-func (sr *statsRecord) sortAll() {
-	for _, v := range sr.clonedStats {
-        toSort := v.cache
-		if v.count < int64(v.length) {
-			toSort = v.cache[0:int(v.count)]
-		}
-		sort.Float64s(toSort)
-	}
 }
 
 func jsonEncode(v interface{}) string {
@@ -368,7 +354,31 @@ func (sr *statsHttpJson) breakLines() string {
 	}
 	return ""
 }
+
+/*
+ * High perf freeze content of a sampler and sort it
+ */
+func freezeAndSort(s *intSampler) (int64, int64, []int) {
+	// freeze, there might be a drift, we are fine
+	count := s.count
+	sum   := s.sum
+
+	// copy cache
+	for i, a := range s.cache {
+		s.clonedCache[i] = a
+	}
+	v := s.clonedCache
+	if count < int64(s.length) {
+		v = s.cache[0:int(count)]
+	}
+	sort.Ints(v)
+	return count, sum, v
+}
+
 func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	sr.lock.RLock()
+	defer sr.lock.RUnlock()
+
 	fmt.Println("admin serving http")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	fmt.Fprintf(w, "{" + sr.breakLines())
@@ -402,21 +412,16 @@ func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	fmt.Println(4)
 	// stats
-	sr.cloneAll()
-	sr.sortAll()
-	for k, v := range sr.clonedStats {
-		if v.count > 0 {
+	for k, v := range sr.statistics {
+		count, sum, vv := freezeAndSort(v)
+		if count > 0 {
 			fmt.Println("sort collected")
 			if !first {
 				fmt.Fprintf(w, "," + sr.breakLines())
 			}
 			first = false
 			fmt.Fprintf(w, "%v: ", jsonEncode(k))
-			vv := v.cache
-			if v.count < int64(v.length) {
-				vv = v.cache[0:int(v.count)]
-			}
-			sortedToJson(w, vv)
+			sortedToJson(w, vv, count, sum)
 			fmt.Fprintf(w, "\n")
 		}
 	}
@@ -424,6 +429,9 @@ func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (sr *statsHttpTxt) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	sr.lock.RLock()
+	defer sr.lock.RUnlock()
+
 	w.Header().Set("Content-Type", "text/plain; charset=utf-8")
 	// counters
 	for k, v := range sr.counters {
@@ -438,34 +446,26 @@ func (sr *statsHttpTxt) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "%v: %v\n", k, f())
 	}
 	// stats
-	sr.cloneAll()
-	sr.sortAll()
-	for k, v := range sr.clonedStats {
-		fmt.Printf("sort collected: len %v\n", v.count)
-		if v.count > 0 {
+	for k, v := range sr.statistics {
+		count, sum, vv := freezeAndSort(v)
+		if count > 0 {
 			fmt.Fprintf(w, "%v: ", k)
-			vv := v.cache
-			if v.count < int64(v.length) {
-				vv = v.cache[0:int(v.count)]
-			}
-			sortedToTxt(w, vv)
+			sortedToTxt(w, vv, count, sum)
 			fmt.Fprintf(w, "\n")
 		}
 	}
 }
 
 func init() {
-	StatsSingleton = NewStats(1001)
-
-	// some basic stats
-	StatsSingleton.AddGauge("uptime", func()float64 {
-		return float64(time.Now().Unix() - startUpTime)
-	})
 }
 
 type AdminError string
 func (e AdminError) Error() string {
 	return string(e)
+}
+
+func (stats *statsRecord) GetStats() Stats {
+	return stats
 }
 
 /*
@@ -509,45 +509,22 @@ func (stats *statsRecord) StartToLive(adminPort *string, jsonLineBreak *bool) er
 	return nil
 }
 
-func StartToLive() error {
-	return StatsSingleton.StartToLive(adminPort, jsonLineBreak)
+func StatsSingleton() Stats {
+	statsSingletonLock.Lock()
+	defer statsSingletonLock.Unlock()
+	if statsSingleton == nil {
+		statsSingleton = NewStats(*statsSampleSize)
+
+		// some basic stats
+		statsSingleton.AddGauge("uptime", func()float64 {
+			return float64(time.Now().Unix() - startUpTime)
+		})
+	}
+	return statsSingleton
 }
 
-/*
-* Some random test code, not sure where to put them yet. TODO: real tests
- */
-func test() {
-	flag.Parse()
-	stats := StatsSingleton
-
-	g1 := float64(0)
-	stats.Counter("c1").Incr(1)
-	stats.Counter("c1").Incr(1)
-	stats.AddGauge("g1", func() float64 {
-		return g1
-	})
-
-	fmt.Printf("Yo there %d\n", stats.Counter("c1").Get())
-	fmt.Printf("Yo there %d\n", stats.Counter("g1").Get())
-	s := NewSampler(3)
-	s.Observe(1)
-	s.Observe(1)
-	s.Observe(1)
-	s.Observe(2)
-	s.Observe(2)
-	tflock := stats.Statistics("tflock")
-	for i := 1; i < 2000; i += 1 {
-		tflock.Observe(float64(i))
-	}
-	stats.AddGauge("yo", func() float64 { return float64(time.Now().Second()) })
-	stats.AddLabel("hello", func() string { return "world" })
-	fmt.Println(s.Sampled())
-
-	ms := stats.Scoped("memcache_client")
-	ms.Counter("requests").Incr(1)
-	ms.Counter("requests").Incr(1)
-	ms1 := ms.Scoped("client1")
-	ms1.Counter("requests").Incr(1)
-
-	stats.StartToLive(adminPort, jsonLineBreak)
+func StartToLive() error {
+	//making sure stats are created.
+	StatsSingleton()
+	return statsSingleton.StartToLive(adminPort, jsonLineBreak)
 }
