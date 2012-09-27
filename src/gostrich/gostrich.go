@@ -19,7 +19,7 @@ import (
 import _ "expvar"
 
 var (
-	statsSingleton *statsRecord         // singleton stats, that's "typically" what you need
+	StatsSingleton *statsRecord         // singleton stats, that's "typically" what you need
 	startUpTime    = time.Now().Unix()  // start up time
 
 	// command line arguments that can be used to customize this module's singleton
@@ -51,10 +51,11 @@ type Sampler interface {
  * One implementation of sampler, it does so by keeping track of min/max and last n items.
  */
 type sampler struct {
-	count int64
-	cache []float64
-	min   float64
-	max   float64
+	count  int64
+	cache  []float64
+	min    float64
+	max    float64
+	length int
 }
 
 /*
@@ -88,14 +89,18 @@ type statsRecord struct {
 	labels      map[string]func() string
 
 	samplerSize int
-	statistics  map[string]Sampler
+	statistics  map[string]*sampler
+
+	// stats are periodically cloned here so that they can be sorted and such without locking.
+	// TODO: finish
+	clonedStats map[string]*sampler
 }
 
 /*
  * statsRecord with a scope name, it prefix all stats with this scope name.
  */
 type scopedStatsRecord struct {
-	*statsRecord
+	base        *statsRecord
 	scope       string
 }
 
@@ -105,7 +110,6 @@ type scopedStatsRecord struct {
 type statsHttp struct {
 	*statsRecord
 	address     string
-	//TODO: make stats reporting configurable? E.g. how many p999 to return through HTTP.
 }
 
 /*
@@ -124,19 +128,19 @@ type statsHttpTxt  statsHttp
 /*
  * Creates a sampler of given size
  */
-func NewSampler(size int) Sampler {
-	return &sampler{0, make([]float64, size), math.MaxFloat64, -1 * math.MaxFloat64}
+func NewSampler(size int) *sampler {
+	return &sampler{0, make([]float64, size), math.MaxFloat64, -1 * math.MaxFloat64, size}
 }
 
 func (s *sampler) Observe(f float64) {
-	length := len(s.cache)
 	count := atomic.AddInt64(&(s.count), 1)
-	s.cache[int((count - 1) % int64(length))] = f
+	s.cache[int((count - 1) % int64(s.length))] = f
 }
 
 func (s *sampler) Sampled() []float64 {
-	if s.count < int64(len(s.cache)) {
-		return s.cache[0:s.count]
+	n := s.count
+	if n < int64(s.length) {
+		return s.cache[0:n]
 	}
 	return s.cache
 }
@@ -151,17 +155,18 @@ func NewStats(sampleSize int) *statsRecord {
 		make(map[string]func() float64),
 		make(map[string]func() string),
 		sampleSize,
-		make(map[string]Sampler),
+		make(map[string]*sampler),
+		make(map[string]*sampler),
 	}
 }
 
 func (sr *statsRecord) Counter(name string) Counter {
+	sr.lock.Lock()
+	defer sr.lock.Unlock()
+
 	if v, ok := sr.counters[name]; ok {
 		return (*myInt64)(v)
 	}
-
-	sr.lock.Lock()
-	defer sr.lock.Unlock()
 
 	var v int64
 	vv := &v
@@ -170,36 +175,37 @@ func (sr *statsRecord) Counter(name string) Counter {
 }
 
 func (sr *statsRecord) AddGauge(name string, gauge func() float64) bool {
+	sr.lock.Lock()
+	defer sr.lock.Unlock()
+
 	if _, ok := sr.gauges[name]; ok {
 		return false
 	}
-
-	sr.lock.Lock()
-	defer sr.lock.Unlock()
 
 	sr.gauges[name] = gauge
 	return true
 }
 
 func (sr *statsRecord) AddLabel(name string, label func() string) bool {
+	sr.lock.Lock()
+	defer sr.lock.Unlock()
+
 	if _, ok := sr.labels[name]; ok {
 		return false
 	}
-
-	sr.lock.Lock()
-	defer sr.lock.Unlock()
 
 	sr.labels[name] = label
 	return true
 }
 
 func (sr *statsRecord) Statistics(name string) Sampler {
+	fmt.Printf("There are %v stats before adding %v\n", len(sr.statistics), name)
+	sr.lock.Lock()
+	defer sr.lock.Unlock()
+
 	if v, ok := sr.statistics[name]; ok {
 		return (v)
 	}
-
-	sr.lock.Lock()
-	defer sr.lock.Unlock()
 
 	vv := NewSampler(sr.samplerSize)
 	sr.statistics[name] = vv
@@ -214,23 +220,23 @@ func (sr *statsRecord) Scoped(name string) Stats {
 }
 
 func (ssr *scopedStatsRecord) Counter(name string) Counter {
-	return ssr.Counter(ssr.scope + "/" + name)
+	return ssr.base.Counter(ssr.scope + "/" + name)
 }
 
 func (ssr *scopedStatsRecord) AddGauge(name string, gauge func() float64) bool {
-	return ssr.AddGauge(ssr.scope + "/" + name, gauge)
+	return ssr.base.AddGauge(ssr.scope + "/" + name, gauge)
 }
 
 func (ssr *scopedStatsRecord) AddLabel(name string, label func() string) bool {
-	return ssr.AddLabel(ssr.scope + "/" + name, label)
+	return ssr.base.AddLabel(ssr.scope + "/" + name, label)
 }
 func (ssr *scopedStatsRecord) Statistics(name string) Sampler {
-	return ssr.Statistics(ssr.scope + "/" + name)
+	return ssr.base.Statistics(ssr.scope + "/" + name)
 }
 
 func (ssr *scopedStatsRecord) Scoped(name string) Stats {
 	return &scopedStatsRecord {
-		ssr.statsRecord,
+		ssr.base,
 		ssr.scope + "/" + name,
 	}
 }
@@ -304,25 +310,41 @@ func sortedToTxt(w http.ResponseWriter, array []float64) {
 	fmt.Fprintf(w, ")")
 }
 
+func (sr *statsRecord) cloneStats() {
+	//TODO:
+	//  - actually copy, note there's no need to lock, if we can tolerate a bit inaccuracy in
+	//    stats, such as max is not really max, but it's large enough typically.
+	//  - maintain a single buffer of copied values
+	//  - let's do single threaded operation for easier buffer management
+}
+
 /*
  * Kicks off sorting of sampled data on collection on multiple CPUs.
  */
 func (sr *statsRecord) sortOnMultipleCPUs(sorted chan sortedValues) {
+	//TODO: update to do single thread sorting, doesn't make much case to sort fast,
+	//      there's no point and it complicates buffer management.
+	sr.cloneStats()
+
 	numItems := len(sr.statistics)
 	if numItems == 0 {
 		close(sorted)
 		return
 	}
 	done := make(chan int)
-	for k, v := range sr.statistics {
-		go func() {
+
+	for k, v := range sr.clonedStats {
+		go func(k string, v Sampler) {
+			fmt.Println("sort.. " + k)
 			sampled := v.Sampled()
 			sort.Float64s(sampled)
 			sorted <- sortedValues{k, sampled}
 			done <- 1
-		} ()
+		} (k, v)
 	}
+
 	for x := range done {
+		fmt.Println("sort counted.. ")
 		numItems -= x
 		if numItems == 0 {
 			close(sorted)
@@ -344,9 +366,11 @@ func (sr *statsHttpJson) breakLines() string {
 	return ""
 }
 func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("admin serving http")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	fmt.Fprintf(w, "{" + sr.breakLines())
 	first := true
+	fmt.Println(1)
 	// counters
 	for k, v := range sr.counters {
 		if !first {
@@ -355,6 +379,7 @@ func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		first = false
 		fmt.Fprintf(w, "%v: %v", jsonEncode(k), *v)
 	}
+	fmt.Println(2)
 	// gauges
 	for k, f := range sr.gauges {
 		if !first {
@@ -363,6 +388,7 @@ func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		first = false
 		fmt.Fprintf(w, "%v: %v", jsonEncode(k), f())
 	}
+	fmt.Println(3)
 	// labels
 	for k, f := range sr.labels {
 		if !first {
@@ -371,16 +397,21 @@ func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		first = false
 		fmt.Fprintf(w, "%v: %v", jsonEncode(k), jsonEncode(f()))
 	}
+	fmt.Println(4)
 	// stats
 	sorted := make(chan sortedValues)
 	go sr.sortOnMultipleCPUs(sorted)
 	for v := range sorted {
-		if !first {
-			fmt.Fprintf(w, "," + sr.breakLines())
+		if len(v.values) > 0 {
+			fmt.Println("sort collected")
+			if !first {
+				fmt.Fprintf(w, "," + sr.breakLines())
+			}
+			first = false
+			fmt.Fprintf(w, "%v: ", jsonEncode(v.name))
+			sortedToJson(w, v.values)
+			fmt.Fprintf(w, "\n")
 		}
-		first = false
-		fmt.Fprintf(w, "%v: ", jsonEncode(v.name))
-		sortedToJson(w, v.values)
 	}
 	fmt.Fprintf(w, sr.breakLines() + "}" + sr.breakLines())
 }
@@ -403,16 +434,20 @@ func (sr *statsHttpTxt) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	sorted := make(chan sortedValues)
 	go sr.sortOnMultipleCPUs(sorted)
 	for v := range sorted {
-		fmt.Fprintf(w, "%v: ", v.name)
-		sortedToTxt(w, v.values)
+		fmt.Printf("sort collected: len %v\n", len(v.values))
+		if len(v.values) > 0 {
+			fmt.Fprintf(w, "%v: ", v.name)
+			sortedToTxt(w, v.values)
+			fmt.Fprintf(w, "\n")
+		}
 	}
 }
 
 func init() {
-	statsSingleton = NewStats(1001)
+	StatsSingleton = NewStats(1001)
 
 	// some basic stats
-	statsSingleton.AddGauge("uptime", func()float64 {
+	StatsSingleton.AddGauge("uptime", func()float64 {
 		return float64(time.Now().Unix() - startUpTime)
 	})
 }
@@ -464,7 +499,7 @@ func (stats *statsRecord) StartToLive(adminPort *string, jsonLineBreak *bool) er
 }
 
 func StartToLive() error {
-	return statsSingleton.StartToLive(adminPort, jsonLineBreak)
+	return StatsSingleton.StartToLive(adminPort, jsonLineBreak)
 }
 
 /*
@@ -472,7 +507,7 @@ func StartToLive() error {
  */
 func test() {
 	flag.Parse()
-	stats := statsSingleton
+	stats := StatsSingleton
 
 	g1 := float64(0)
 	stats.Counter("c1").Incr(1)
