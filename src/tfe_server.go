@@ -18,6 +18,7 @@ import (
 
 var (
 	conf = flag.String("rules", "empty", "rules to run, comma seperated")
+	numcpu = flag.Int("numcpu", 1, "number of cpu to use")
 	cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 )
 
@@ -29,7 +30,7 @@ var (
 
 func main() {
 	flag.Parse()
-	runtime.GOMAXPROCS(runtime.NumCPU())
+	runtime.GOMAXPROCS(*numcpu)
 
 	if *cpuprofile != "" {
 		log.Println("Enabling profiling")
