@@ -181,6 +181,7 @@ func (s *serviceWithTimeout) Serve(req interface{})(rsp interface{}, err error) 
 type cluster struct {
 	services []*ServiceWithHistory
 	name     string
+	tries  int
 	reportTo ServiceReporter
 	lock     sync.RWMutex
 }
@@ -189,7 +190,7 @@ type LoadBalancer interface {
 	Serve(req interface{})(rsp interface{}, err error)
 }
 
-func (c *cluster) Serve(req interface{})(rsp interface{}, err error) {
+func (c *cluster) serveOnce(req interface{})(rsp interface{}, err error) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
@@ -224,10 +225,21 @@ func (c *cluster) Serve(req interface{})(rsp interface{}, err error) {
 	return
 }
 
-func NewCluster(services []*ServiceWithHistory, name string, reportTo ServiceReporter) *cluster {
+func (c *cluster) Serve(req interface{})(rsp interface{}, err error) {
+	for i := 0; i < c.tries; i += 1 {
+		rsp, err = c.serveOnce(req)
+		if err != nil {
+			return
+		}
+	}
+	return
+}
+
+func NewCluster(services []*ServiceWithHistory, name string, tries int, reportTo ServiceReporter) *cluster {
 	return &cluster {
 		services,
 		name,
+		tries,
 		reportTo,
 		sync.RWMutex {},
 	}
