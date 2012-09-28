@@ -65,12 +65,12 @@ type ServiceWithHistory struct {
 	status        ServiceStatus       // mutable field of service status
 	proberRunning int32	              // mutable field of whether there's a prober running
 
-	reportTo      []ServiceReporter
+	reportTo      ServiceReporter
 	flaky         float64 // what's average latency to be considered flaky in micro
 	dead          float64 // what's average latency to be considered dead in micro
 }
 
-func NewServiceWithHistory(service Service, name string, reportTo []ServiceReporter) *ServiceWithHistory {
+func NewServiceWithHistory(service Service, name string, reportTo ServiceReporter) *ServiceWithHistory {
 	return &ServiceWithHistory {
 		service,
 		name,
@@ -93,9 +93,7 @@ func (s *ServiceWithHistory) Serve(req interface{})(rsp interface{}, err error) 
 
 	// collect stats before adjusting latency
 	if s.reportTo != nil {
-		for _, reporter := range s.reportTo {
-			reporter(req, rsp, err, time.Duration(latency))
-		}
+		s.reportTo(req, rsp, err, time.Duration(latency))
 	}
 
 	if err != nil {
@@ -174,6 +172,7 @@ func (s *serviceWithTimeout) Serve(req interface{})(rsp interface{}, err error) 
 type cluster struct {
 	services []*ServiceWithHistory
 	name     string
+	reportTo ServiceReporter
 	lock     sync.RWMutex
 }
 
@@ -187,6 +186,7 @@ func (c *cluster) Serve(req interface{})(rsp interface{}, err error) {
 
 	rsp = nil
 	err = nil
+	then := time.Now()
 
 	if len(c.services) == 0 {
 		err = TfeError("There's no underlying service in cluster " + c.name)
@@ -201,13 +201,25 @@ func (c *cluster) Serve(req interface{})(rsp interface{}, err error) {
 		s = c.services[time.Now().Nanosecond()%len(c.services)]
 	}
 	rsp, err = s.Serve(req)
+
+    now := time.Now()
+	// micro seconds
+	latency := (now.Second()-then.Second())*1000000 +
+		(now.Nanosecond()-then.Nanosecond())/1000
+
+	// collect stats before adjusting latency
+	if c.reportTo != nil {
+		c.reportTo(req, rsp, err, time.Duration(latency))
+	}
+
 	return
 }
 
-func NewCluster(services []*ServiceWithHistory, name string) *cluster {
+func NewCluster(services []*ServiceWithHistory, name string, reportTo ServiceReporter) *cluster {
 	return &cluster {
 		services,
 		name,
+		reportTo,
 		sync.RWMutex {},
 	}
 }
