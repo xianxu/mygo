@@ -117,7 +117,7 @@ type TransportWithHost struct {
 func NewTransportWithHost(host string, hl MaxIdleConnsPerHost) *TransportWithHost {
 	return &TransportWithHost{
 		host,
-		http.Transport{MaxIdleConnsPerHost: int(hl)}, // transport to use
+		http.Transport{MaxIdleConnsPerHost: int(hl), DisableCompression: true}, // transport to use
 		gostrich.NewIntSampler(100),
 		NODE_ALIVE,
 		1000 * 1000,

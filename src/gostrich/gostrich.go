@@ -14,11 +14,12 @@ import (
 	"sync/atomic"
 	"time"
 
-	"code.google.com/p/log4go"
+	"log"
 )
 
 // expose command line and memory stats. TODO: move over to gostrich so those can be viz-ed.
 import _ "expvar"
+import _ "net/http/pprof"
 
 var (
 	statsSingletonLock = sync.Mutex{}
@@ -381,7 +382,6 @@ func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	sr.lock.RLock()
 	defer sr.lock.RUnlock()
 
-	log4go.Debug("Admin serving http")
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	fmt.Fprintf(w, "{"+sr.breakLines())
 	first := true
@@ -502,7 +502,7 @@ func (stats *statsRecord) StartToLive(adminPort *string, jsonLineBreak *bool) er
 	case er := <-serverError:
 		return AdminError("Can't start up server, error was: " + er.Error())
 	case <-shutdown:
-		log4go.Info("Shutdown requested")
+		log.Println("Shutdown requested")
 	}
 	return nil
 }
@@ -522,6 +522,10 @@ func StatsSingleton() Stats {
 }
 
 func StartToLive() error {
+	// starts up debugging server
+	go func() {
+		log.Println(http.ListenAndServe(":6060", nil))
+	}()
 	//making sure stats are created.
 	StatsSingleton()
 	return statsSingleton.StartToLive(adminPort, jsonLineBreak)

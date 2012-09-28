@@ -7,12 +7,18 @@ import (
 
 	"flag"
 	"net/http"
+	"runtime"
 	"time"
-	"code.google.com/p/log4go"
+	"log"
+	"os"
+
+	"runtime/pprof"
+	_ "net/http/pprof"
 )
 
 var (
 	conf = flag.String("rules", "empty", "rules to run, comma seperated")
+	cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
 )
 
 //TODO tests:
@@ -23,7 +29,19 @@ var (
 
 func main() {
 	flag.Parse()
-	log4go.Info("Starting TFE")
+	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	if *cpuprofile != "" {
+		log.Println("Enabling profiling")
+        f, err := os.Create(*cpuprofile)
+        if err != nil {
+            log.Fatal(err)
+        }
+        pprof.StartCPUProfile(f)
+        defer pprof.StopCPUProfile()
+    }
+
+	log.Println("Starting TFE")
 	theTfe := &tfe.Tfe{tfe.GetRules(*conf)()}
 	for binding, rules := range theTfe.BindingToRules {
 		server := http.Server{
@@ -37,5 +55,5 @@ func main() {
 		go server.ListenAndServe()
 	}
 	gostrich.StartToLive()
-	log4go.Info("Stopped TFE")
+	log.Println("Stopped TFE")
 }
