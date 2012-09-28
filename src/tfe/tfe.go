@@ -8,7 +8,6 @@ import (
 
 	"io"
 	"net/http"
-	"net/url"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -225,15 +224,9 @@ func (p *prefixRewriteRule) TransformRequest(r *http.Request) *TransportWithHost
 	for retries := 0; atomic.LoadInt32((*int32)(&client.status)) > int32(retries); retries += 1 {
 		client = p.clients[time.Now().Nanosecond()%len(p.clients)]
 	}
-	r.URL = &url.URL{
-		"http", //TODO: shit why this is not set?
-		r.URL.Opaque,
-		r.URL.User,
-		client.hostPort,
-		p.proxiedPathPrefix + r.URL.Path[len(p.sourcePathPrefix):len(r.URL.Path)],
-		r.URL.RawQuery,
-		r.URL.Fragment,
-	}
+	r.URL.Scheme = "http"
+	r.URL.Host = client.hostPort
+	r.URL.Path = p.proxiedPathPrefix + r.URL.Path[len(p.sourcePathPrefix):len(r.URL.Path)]
 	r.Host = client.hostPort
 	r.RequestURI = ""
 	for k, v := range p.proxiedAttachHeaders {

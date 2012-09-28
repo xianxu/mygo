@@ -28,10 +28,19 @@ type Service interface {
 
 type HttpService struct {
 	http.RoundTripper
+	HostPort string  // this service will rewrite request to this host port and binds allawable
+	                 // request
 }
 
 func (h *HttpService) Serve(req interface{})(rsp interface{}, err error) {
-	return h.RoundTrip(req.(*http.Request))
+	httpReq := req.(*http.Request)
+
+	httpReq.URL.Scheme = "http"  // hack?
+	httpReq.URL.Host = h.HostPort
+	httpReq.Host = h.HostPort
+	httpReq.RequestURI = ""
+
+	return h.RoundTrip(httpReq)
 }
 
 /*
