@@ -65,7 +65,10 @@ type intSampler struct {
 
 	// thread safe buffer
 	cache []int
+}
 
+type intSamplerWithClone struct {
+	intSampler
 	// cloned cache's used to do stats reporting, where we need to sort the content of cache.
 	clonedCache []int
 }
@@ -101,7 +104,7 @@ type statsRecord struct {
 	labels   map[string]func() string
 
 	samplerSize int // val
-	statistics  map[string]*intSampler
+	statistics  map[string]*intSamplerWithClone
 }
 
 /*
@@ -142,6 +145,17 @@ func NewIntSampler(size int) *intSampler {
 		0,
 		size,
 		make([]int, size),
+	}
+}
+
+func NewIntSamplerWithClone(size int) *intSamplerWithClone {
+	return &intSamplerWithClone{
+		intSampler {
+			0,
+			0,
+			size,
+			make([]int, size),
+		},
 		make([]int, size),
 	}
 }
@@ -160,6 +174,20 @@ func (s *intSampler) Sampled() []int {
 	return s.cache
 }
 
+func (s *intSamplerWithClone) Observe(f int) {
+	count := atomic.AddInt64(&(s.count), 1)
+	atomic.AddInt64(&(s.sum), int64(f))
+	s.cache[int((count-1)%int64(s.length))] = f
+}
+
+func (s *intSamplerWithClone) Sampled() []int {
+	n := s.count
+	if n < int64(s.length) {
+		return s.cache[0:n]
+	}
+	return s.cache
+}
+
 /*
  * Create a new stats object
  */
@@ -170,7 +198,7 @@ func NewStats(sampleSize int) *statsRecord {
 		make(map[string]func() float64),
 		make(map[string]func() string),
 		sampleSize,
-		make(map[string]*intSampler),
+		make(map[string]*intSamplerWithClone),
 	}
 }
 
@@ -248,7 +276,7 @@ func (sr *statsRecord) Statistics(name string) IntSampler {
 		return (v)
 	}
 
-	vv := NewIntSampler(sr.samplerSize)
+	vv := NewIntSamplerWithClone(sr.samplerSize)
 	sr.statistics[name] = vv
 	return vv
 }
@@ -365,7 +393,7 @@ func (sr *statsHttpJson) breakLines() string {
 /*
  * High perf freeze content of a sampler and sort it
  */
-func freezeAndSort(s *intSampler) (int64, int64, []int) {
+func freezeAndSort(s *intSamplerWithClone) (int64, int64, []int) {
 	// freeze, there might be a drift, we are fine
 	count := s.count
 	sum := s.sum

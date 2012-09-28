@@ -13,12 +13,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
-	"code.google.com/p/log4go"
-)
-
-var (
-	TfeTimeout = TfeError("timeout")
+	"log"
 )
 
 // bunch of alias to make rule writing more descriptive
@@ -30,12 +25,6 @@ type ProxiedHost string
 type Retries int
 type Timeout time.Duration
 type MaxIdleConnsPerHost int
-
-type TfeError string
-
-func (t TfeError) Error() string {
-	return string(t)
-}
 
 type Rules []Rule
 
@@ -274,17 +263,7 @@ func (p *TransportWithHost) GatherStats() func(*http.Request, *http.Response, er
 	return p.gatherStats
 }
 
-type intSlice []int
-
-func (ns intSlice) average() float64 {
-	sum := 0.0
-	for _, v := range ns {
-		sum += float64(v)
-	}
-	return float64(sum) / float64(len(ns))
-}
-
-type responseAndError struct {
+type responseAndError1 struct {
 	rsp *http.Response
 	err error
 }
@@ -294,12 +273,12 @@ dt time.Duration) (rsp *http.Response, err error) {
 	rsp = nil
 
 	tick := time.After(dt)
-	done := make(chan *responseAndError)
+	done := make(chan *responseAndError1)
 	then := time.Now()
 
 	go func() {
 		rsp, err = client.transport.RoundTrip(req)
-		done <- &responseAndError{rsp, err}
+		done <- &responseAndError1{rsp, err}
 	}()
 
 	select {
@@ -364,7 +343,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				client := rule.TransformRequest(r)
 
 				if client == nil {
-					log4go.Warn("No client is available to handle request %v\n", *r)
+					log.Printf("No client is available to handle request %v\n", *r)
 					w.WriteHeader(503)
 					return
 				}
@@ -373,7 +352,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if err != nil {
-				log4go.Warn("Error occurred while proxying: %v\n", err.Error())
+				log.Printf("Error occurred while proxying: %v\n", err.Error())
 				w.WriteHeader(503)
 				return
 			}
@@ -396,7 +375,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			// log error while copying
 			if err != nil {
-				log4go.Warn("err while piping bytes: %v\n", err)
+				log.Printf("err while piping bytes: %v\n", err)
 			}
 
 			return
