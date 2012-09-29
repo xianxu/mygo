@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"sync"
 	"sync/atomic"
+	"log"
 )
 /*
  * Generic load balancer/
@@ -64,7 +65,7 @@ func (ns intSlice) average() float64 {
 	return float64(sum) / float64(len(ns))
 }
 
-type ServiceReporter func(interface{}, interface{}, error, time.Duration)
+type ServiceReporter func(interface{}, interface{}, error, int)
 
 type ServiceWithHistory struct {
 	service       Service
@@ -102,7 +103,7 @@ func (s *ServiceWithHistory) Serve(req interface{})(rsp interface{}, err error) 
 
 	// collect stats before adjusting latency
 	if s.reportTo != nil {
-		s.reportTo(req, rsp, err, time.Duration(latency))
+		s.reportTo(req, rsp, err, latency)
 	}
 
 	if err != nil {
@@ -119,6 +120,7 @@ func (s *ServiceWithHistory) Serve(req interface{})(rsp interface{}, err error) 
 		// start prober to probe dead node, if there's no prober running
 		if atomic.CompareAndSwapInt32((*int32)(&s.proberRunning), 0, 1) {
 			go func() {
+				log.Println("service go bad, start probing")
 				// probe every 1 second
 				for {
 					time.Sleep(1 * time.Second)
@@ -219,7 +221,7 @@ func (c *cluster) serveOnce(req interface{})(rsp interface{}, err error) {
 
 	// collect stats before adjusting latency
 	if c.reportTo != nil {
-		c.reportTo(req, rsp, err, time.Duration(latency))
+		c.reportTo(req, rsp, err, latency)
 	}
 
 	return
@@ -244,3 +246,4 @@ func NewCluster(services []*ServiceWithHistory, name string, tries int, reportTo
 		sync.RWMutex {},
 	}
 }
+
