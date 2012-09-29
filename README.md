@@ -17,7 +17,9 @@ Build
 
 Go into the "src", do:
 >  go install tfe/confs
+>
 >  go run main/tfe_server.go -rules=test
+>
 
 To build for linux, do:
 >  GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build main/tfe_server.go
