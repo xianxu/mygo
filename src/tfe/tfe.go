@@ -9,18 +9,8 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
 	"log"
 )
-
-// bunch of alias to make rule writing more descriptive
-type RequestHost string
-type RequestPrefix string
-type ProxiedPrefix string
-type ProxiedHost string
-type Retries int
-type Timeout time.Duration
-type MaxIdleConnsPerHost int
 
 type Rules []Rule
 
@@ -58,50 +48,38 @@ type Rule interface {
 /*
 * Simple rule implementation that allows filter based on Host/port and resource prefix.
  */
-type prefixRewriteRule struct {
+type PrefixRewriteRule struct {
 	// transformation rules
-	sourceHost           string // "" matches all
-	sourcePathPrefix     string
-	proxiedPathPrefix    string
-	proxiedAttachHeaders map[string][]string
+	SourceHost           string // "" matches all
+	SourcePathPrefix     string
+	ProxiedPathPrefix    string
+	ProxiedAttachHeaders map[string][]string
 	//TODO: how to enforce some type checking, we don't want any service, but some HttpService
-	service              Service
+	Service              Service
 }
 
-func NewPrefixRule(rh RequestHost,
-rp RequestPrefix,
-pp ProxiedPrefix,
-pah map[string][]string,
-s Service) *prefixRewriteRule {
-	return &prefixRewriteRule{
-		string(rh),
-		string(rp),
-		string(pp),
-		pah,
-		s,
-	}
+func (p *PrefixRewriteRule) HandlesRequest(r *http.Request) bool {
+	return (p.SourceHost == "" || p.SourceHost == r.Host) &&
+		strings.HasPrefix(r.URL.Path, p.SourcePathPrefix)
 }
 
-func (p *prefixRewriteRule) HandlesRequest(r *http.Request) bool {
-	return (p.sourceHost == "" || p.sourceHost == r.Host) &&
-		strings.HasPrefix(r.URL.Path, p.sourcePathPrefix)
-}
-
-func (p *prefixRewriteRule) TransformRequest(r *http.Request) {
-	r.URL.Path = p.proxiedPathPrefix + r.URL.Path[len(p.sourcePathPrefix):len(r.URL.Path)]
+func (p *PrefixRewriteRule) TransformRequest(r *http.Request) {
+	r.URL.Path = p.ProxiedPathPrefix + r.URL.Path[len(p.SourcePathPrefix):len(r.URL.Path)]
 	r.RequestURI = ""
-	for k, v := range p.proxiedAttachHeaders {
-		r.Header[k] = v
+	if p.ProxiedAttachHeaders != nil {
+		for k, v := range p.ProxiedAttachHeaders {
+			r.Header[k] = v
+		}
 	}
 }
 
-func (p *prefixRewriteRule) TransformResponse(rsp *http.Response) {
+func (p *PrefixRewriteRule) TransformResponse(rsp *http.Response) {
 	//TODO
 	return
 }
 
-func (p *prefixRewriteRule) GetService() Service {
-	return p.service
+func (p *PrefixRewriteRule) GetService() Service {
+	return p.Service
 }
 
 func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -109,6 +87,12 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if rule.HandlesRequest(r) {
 			rule.TransformRequest(r)
 			s := rule.GetService()
+			if s == nil {
+				log.Printf("No service defined for rule")
+				w.WriteHeader(404)
+				return
+			}
+
 			rawRsp, err := s.Serve(r)
 
 			if err != nil {
