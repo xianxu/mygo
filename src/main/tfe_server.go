@@ -17,9 +17,11 @@ import (
 )
 
 var (
-	conf = flag.String("rules", "empty", "rules to run, comma seperated")
-	numcpu = flag.Int("numcpu", 1, "number of cpu to use")
-	cpuprofile = flag.String("cpuprofile", "", "write cpu profile to file")
+	conf         = flag.String("rules", "empty", "rules to run, comma seperated")
+	numCPU       = flag.Int("numcpu", 1, "number of cpu to use")
+	cpuProfile   = flag.String("cpuprofile", "", "write cpu profile to file")
+	readTimeout  = flag.Duration("read_timeout", 10*time.Second, "read timeout")
+	writeTimeout = flag.Duration("write_timeout", 10*time.Second, "read timeout")
 )
 
 //TODO tests:
@@ -30,17 +32,17 @@ var (
 
 func main() {
 	flag.Parse()
-	runtime.GOMAXPROCS(*numcpu)
+	runtime.GOMAXPROCS(*numCPU)
 
-	if *cpuprofile != "" {
+	if *cpuProfile != "" {
 		log.Println("Enabling profiling")
-        f, err := os.Create(*cpuprofile)
-        if err != nil {
-            log.Fatal(err)
-        }
-        pprof.StartCPUProfile(f)
-        defer pprof.StopCPUProfile()
-    }
+		f, err := os.Create(*cpuProfile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 
 	log.Println("Starting TFE")
 	theTfe := &tfe.Tfe{tfe.GetRules(*conf)()}
@@ -48,8 +50,8 @@ func main() {
 		server := http.Server{
 			binding,
 			&rules,
-			10 * time.Second,
-			10 * time.Second,
+			*readTimeout,
+			*writeTimeout,
 			0,
 			nil, // SSL TODO
 		}

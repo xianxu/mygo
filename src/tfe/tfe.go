@@ -32,6 +32,9 @@ type Tfe struct {
 * It also provides a way to report stats on the service.
  */
 type Rule interface {
+	// name of this rule
+	GetName() string
+
 	// whether this rule handles this request
 	HandlesRequest(*http.Request) bool
 
@@ -49,13 +52,14 @@ type Rule interface {
 * Simple rule implementation that allows filter based on Host/port and resource prefix.
  */
 type PrefixRewriteRule struct {
+	Name string
 	// transformation rules
 	SourceHost           string // "" matches all
 	SourcePathPrefix     string
 	ProxiedPathPrefix    string
 	ProxiedAttachHeaders map[string][]string
 	//TODO: how to enforce some type checking, we don't want any service, but some HttpService
-	Service              Service
+	Service Service
 }
 
 func (p *PrefixRewriteRule) HandlesRequest(r *http.Request) bool {
@@ -82,21 +86,36 @@ func (p *PrefixRewriteRule) GetService() Service {
 	return p.Service
 }
 
+func (p *PrefixRewriteRule) GetName() string {
+	return p.Name
+}
+
 func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, rule := range ([]Rule)(*rs) {
 		if rule.HandlesRequest(r) {
+			ruleName := rule.GetName()
 			rule.TransformRequest(r)
 			s := rule.GetService()
 			if s == nil {
-				log.Printf("No service defined for rule")
+				log.Printf("No service defined for rule %v\n", ruleName)
 				w.WriteHeader(404)
+				return
+			}
+
+			// replace r.Body with CachedReader so if we need to retry, we can.
+			var err error
+			if r.Body, err = NewCachedReader(r.Body); err != nil {
+				// if we can't read request body, just fail
+				log.Printf("Error occurred while reading request body for rule %v: %v\n",
+					ruleName, err.Error())
+				w.WriteHeader(503)
 				return
 			}
 
 			rawRsp, err := s.Serve(r)
 
 			if err != nil {
-				log.Printf("Error occurred while proxying: %v\n", err.Error())
+				log.Printf("Error occurred while proxying for rule %v: %v\n", ruleName, err.Error())
 				w.WriteHeader(503)
 				return
 			}
@@ -121,7 +140,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			// log error while copying
 			if err != nil {
 				// TODO, shouldn't happen, but it does happen :S
-				log.Printf("err while piping bytes: %v\n", err)
+				log.Printf("err while piping bytes for rule %v: %v\n", ruleName, err)
 			}
 
 			return
@@ -132,7 +151,6 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-//TODO: stats collection's pushed into "Cluster", need to figure out what to do there.
 func HttpStats(stats gostrich.Stats) func(interface{}, interface{}, error, int) {
 	counterReq := stats.Counter("req")
 	counterSucc := stats.Counter("req/success")
@@ -147,7 +165,7 @@ func HttpStats(stats gostrich.Stats) func(interface{}, interface{}, error, int) 
 	counterRst := stats.Counter("rsp/rst")
 
 	return func(rawReq interface{}, rawRsp interface{}, err error, micro int) {
-        /*req := rawReq.(*http.Request)*/
+		/*req := rawReq.(*http.Request)*/
 		counterReq.Incr(1)
 		if err != nil {
 			counterFail.Incr(1)

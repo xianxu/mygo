@@ -150,7 +150,7 @@ func NewIntSampler(size int) *intSampler {
 
 func NewIntSamplerWithClone(size int) *intSamplerWithClone {
 	return &intSamplerWithClone{
-		intSampler {
+		intSampler{
 			0,
 			0,
 			size,
@@ -399,12 +399,10 @@ func freezeAndSort(s *intSamplerWithClone) (int64, int64, []int) {
 	sum := s.sum
 
 	// copy cache
-	for i, a := range s.cache {
-		s.clonedCache[i] = a
-	}
+	copy(s.clonedCache, s.cache)
 	v := s.clonedCache
 	if count < int64(s.length) {
-		v = s.cache[0:int(count)]
+		v = s.clonedCache[0:int(count)]
 	}
 	sort.Ints(v)
 	return count, sum, v

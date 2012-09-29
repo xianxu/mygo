@@ -24,24 +24,30 @@ func (t TfeError) Error() string {
 }
 
 type Service interface {
-	Serve(req interface{})(rsp interface{}, err error)
+	Serve(req interface{}) (rsp interface{}, err error)
 }
 
 type HttpService struct {
 	http.RoundTripper
-	HostPort string  // this service will rewrite request to this host port and binds allawable
-	                 // request
+	HostPort string // this service will rewrite request to this host port and binds allawable
+	// request
 }
 
-func (h *HttpService) Serve(req interface{})(rsp interface{}, err error) {
+func (h *HttpService) Serve(req interface{}) (rsp interface{}, err error) {
 	httpReq := req.(*http.Request)
+	rsp = nil
 
-	httpReq.URL.Scheme = "http"  // hack?
-	httpReq.URL.Host = h.HostPort
-	httpReq.Host = h.HostPort
-	httpReq.RequestURI = ""
+	// if hostPort's not set as we need, update it. this happens if we load balance to another
+	// host on retry.
+	if httpReq.URL.Host != h.HostPort {
+		httpReq.URL.Scheme = "http" // hack?
+		httpReq.URL.Host = h.HostPort
+		httpReq.Host = h.HostPort
+	}
 
-	return h.RoundTrip(httpReq)
+	/*log.Println("Http req sent by HttpService")*/
+	rsp, err = h.RoundTrip(httpReq)
+	return
 }
 
 /*
@@ -68,20 +74,20 @@ func (ns intSlice) average() float64 {
 type ServiceReporter func(interface{}, interface{}, error, int)
 
 type ServiceWithHistory struct {
-	service       Service
-	name          string              // human readable name
-	latencies     gostrich.IntSampler // keeps track of host latency, in micro seconds
+	service   Service
+	name      string              // human readable name
+	latencies gostrich.IntSampler // keeps track of host latency, in micro seconds
 
-	status        ServiceStatus       // mutable field of service status
-	proberRunning int32	              // mutable field of whether there's a prober running
+	status        ServiceStatus // mutable field of service status
+	proberRunning int32         // mutable field of whether there's a prober running
 
-	reportTo      ServiceReporter
-	flaky         float64 // what's average latency to be considered flaky in micro
-	dead          float64 // what's average latency to be considered dead in micro
+	reportTo ServiceReporter
+	flaky    float64 // what's average latency to be considered flaky in micro
+	dead     float64 // what's average latency to be considered dead in micro
 }
 
 func NewServiceWithHistory(service Service, name string, reportTo ServiceReporter) *ServiceWithHistory {
-	return &ServiceWithHistory {
+	return &ServiceWithHistory{
 		service,
 		name,
 		gostrich.NewIntSampler(100),
@@ -93,10 +99,10 @@ func NewServiceWithHistory(service Service, name string, reportTo ServiceReporte
 	}
 }
 
-func (s *ServiceWithHistory) Serve(req interface{})(rsp interface{}, err error) {
+func (s *ServiceWithHistory) Serve(req interface{}) (rsp interface{}, err error) {
 	then := time.Now()
 	rsp, err = s.service.Serve(req)
-    now := time.Now()
+	now := time.Now()
 	// micro seconds
 	latency := (now.Second()-then.Second())*1000000 +
 		(now.Nanosecond()-then.Nanosecond())/1000
@@ -125,7 +131,7 @@ func (s *ServiceWithHistory) Serve(req interface{})(rsp interface{}, err error) 
 				for {
 					time.Sleep(1 * time.Second)
 					log.Printf("Service %v is dead, probing..", s.name)
-					s.Serve(req)  // don't care about result
+					s.Serve(req) // don't care about result
 					if atomic.LoadInt32((*int32)(&s.status)) < int32(SERVICE_DEAD) {
 						log.Printf("Service %v recovered\n", s.name)
 						break
@@ -142,12 +148,12 @@ func (s *ServiceWithHistory) Serve(req interface{})(rsp interface{}, err error) 
 }
 
 type serviceWithTimeout struct {
-	service       Service
-	timeout       time.Duration
+	service Service
+	timeout time.Duration
 }
 
 func NewServiceWithTimeout(s Service, timeout time.Duration) *serviceWithTimeout {
-	return &serviceWithTimeout {
+	return &serviceWithTimeout{
 		s,
 		timeout,
 	}
@@ -158,7 +164,7 @@ type responseAndError struct {
 	err error
 }
 
-func (s *serviceWithTimeout) Serve(req interface{})(rsp interface{}, err error) {
+func (s *serviceWithTimeout) Serve(req interface{}) (rsp interface{}, err error) {
 	rsp = nil
 
 	tick := time.After(s.timeout)
@@ -185,16 +191,16 @@ func (s *serviceWithTimeout) Serve(req interface{})(rsp interface{}, err error) 
 type cluster struct {
 	services []*ServiceWithHistory
 	name     string
-	tries  int
+	tries    int
 	reportTo ServiceReporter
 	lock     sync.RWMutex
 }
 
 type LoadBalancer interface {
-	Serve(req interface{})(rsp interface{}, err error)
+	Serve(req interface{}) (rsp interface{}, err error)
 }
 
-func (c *cluster) serveOnce(req interface{})(rsp interface{}, err error) {
+func (c *cluster) serveOnce(req interface{}) (rsp interface{}, err error) {
 	c.lock.RLock()
 	defer c.lock.RUnlock()
 
@@ -216,7 +222,7 @@ func (c *cluster) serveOnce(req interface{})(rsp interface{}, err error) {
 	}
 	rsp, err = s.Serve(req)
 
-    now := time.Now()
+	now := time.Now()
 	// micro seconds
 	latency := (now.Second()-then.Second())*1000000 +
 		(now.Nanosecond()-then.Nanosecond())/1000
@@ -229,10 +235,10 @@ func (c *cluster) serveOnce(req interface{})(rsp interface{}, err error) {
 	return
 }
 
-func (c *cluster) Serve(req interface{})(rsp interface{}, err error) {
+func (c *cluster) Serve(req interface{}) (rsp interface{}, err error) {
 	for i := 0; i < c.tries; i += 1 {
 		rsp, err = c.serveOnce(req)
-		if err != nil {
+		if err == nil {
 			return
 		}
 	}
@@ -240,12 +246,11 @@ func (c *cluster) Serve(req interface{})(rsp interface{}, err error) {
 }
 
 func NewCluster(services []*ServiceWithHistory, name string, tries int, reportTo ServiceReporter) *cluster {
-	return &cluster {
+	return &cluster{
 		services,
 		name,
 		tries,
 		reportTo,
-		sync.RWMutex {},
+		sync.RWMutex{},
 	}
 }
-

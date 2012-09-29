@@ -10,14 +10,15 @@ func init() {
 	ok := tfe.AddRules("tweetbutton-smf1", func() map[string]tfe.Rules {
 		return map[string]tfe.Rules{
 			":8888": tfe.Rules{
-				&tfe.PrefixRewriteRule {
-					SourcePathPrefix:     "/1/urls/",
-					ProxiedPathPrefix:    "/1/urls/",
+				&tfe.PrefixRewriteRule{
+					Name:              "tweetbutton-smf1-plaintext",
+					SourcePathPrefix:  "/1/urls/",
+					ProxiedPathPrefix: "/1/urls/",
 					ProxiedAttachHeaders: map[string][]string{
 						"True-Client-Ip": []string{"127.0.0.1"},
 					},
 					Service: tfe.CreateStaticHttpCluster(
-						tfe.StaticHttpCluster {
+						tfe.StaticHttpCluster{
 							Name: "tweetbutton",
 							Hosts: []string{
 								"smf1-aea-35-sr2:8000",
@@ -33,7 +34,7 @@ func init() {
 							Timeout: 2 * time.Second,
 							Retries: 1,
 						}),
-					},
+				},
 			},
 		}
 	})
