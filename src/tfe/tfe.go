@@ -110,7 +110,6 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			rule.TransformRequest(r)
 			s := rule.GetService()
 			rawRsp, err := s.Serve(r)
-			rsp := rawRsp.(*http.Response)
 
 			if err != nil {
 				log.Printf("Error occurred while proxying: %v\n", err.Error())
@@ -118,6 +117,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
+			rsp := rawRsp.(*http.Response)
 			rule.TransformResponse(rsp)
 
 			headers := w.Header()
@@ -164,13 +164,12 @@ func HttpStats(stats gostrich.Stats) func(interface{}, interface{}, error, int) 
 
 	return func(rawReq interface{}, rawRsp interface{}, err error, micro int) {
         /*req := rawReq.(*http.Request)*/
-		rsp := rawRsp.(*http.Response)
-
 		counterReq.Incr(1)
 		if err != nil {
 			counterFail.Incr(1)
 		} else {
 			counterSucc.Incr(1)
+			rsp := rawRsp.(*http.Response)
 			code := rsp.StatusCode
 			switch {
 			case code >= 100 && code < 200:

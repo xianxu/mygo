@@ -120,12 +120,14 @@ func (s *ServiceWithHistory) Serve(req interface{})(rsp interface{}, err error) 
 		// start prober to probe dead node, if there's no prober running
 		if atomic.CompareAndSwapInt32((*int32)(&s.proberRunning), 0, 1) {
 			go func() {
-				log.Println("service go bad, start probing")
+				log.Printf("Service %v gone bad, start probing\n", s.name)
 				// probe every 1 second
 				for {
 					time.Sleep(1 * time.Second)
+					log.Printf("Service %v is dead, probing..", s.name)
 					s.Serve(req)  // don't care about result
 					if atomic.LoadInt32((*int32)(&s.status)) < int32(SERVICE_DEAD) {
+						log.Printf("Service %v recovered\n", s.name)
 						break
 					}
 				}

@@ -22,7 +22,7 @@ func init() {
 							tfe.NewServiceWithHistory(
 								tfe.NewServiceWithTimeout(
 									&tfe.HttpService { &http.Transport {}, "t.co" },
-									time.Second),
+									1000 * time.Millisecond),
 								"t.co",
 								tfe.ServiceReporter(tfe.HttpStats(gostrich.StatsSingleton().Scoped("tco").Scoped("t.co")))),
 						},
