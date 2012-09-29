@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	reader := &tfe.CachedReader { []byte("hello\n"), 0, false }
+	reader := &tfe.CachedReader{[]byte("hello\n"), 0, false}
 	buf := make([]byte, 100)
 	reader.Read(buf)
 	fmt.Println(string(buf))

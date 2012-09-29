@@ -8,6 +8,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"log"
+	"errors"
 )
 /*
  * Generic load balancer/
@@ -34,8 +35,14 @@ type HttpService struct {
 }
 
 func (h *HttpService) Serve(req interface{}) (rsp interface{}, err error) {
-	httpReq := req.(*http.Request)
+	var httpReq *http.Request
+	var ok bool
 	rsp = nil
+
+	if httpReq, ok = req.(*http.Request); !ok {
+		err = errors.New("HttpService: expect *http.Request as request object.")
+		return
+	}
 
 	// if hostPort's not set as we need, update it. this happens if we load balance to another
 	// host on retry.
@@ -43,6 +50,12 @@ func (h *HttpService) Serve(req interface{}) (rsp interface{}, err error) {
 		httpReq.URL.Scheme = "http" // hack?
 		httpReq.URL.Host = h.HostPort
 		httpReq.Host = h.HostPort
+	}
+
+	var cr *CachedReader
+	if cr, ok = httpReq.Body.(*CachedReader); ok {
+		// if it's a cached reader, let's reset it
+		cr.Reset()
 	}
 
 	/*log.Println("Http req sent by HttpService")*/
@@ -240,8 +253,11 @@ func (c *cluster) Serve(req interface{}) (rsp interface{}, err error) {
 		rsp, err = c.serveOnce(req)
 		if err == nil {
 			return
+		} else {
+			log.Printf("Error serving request in cluster %v\n", c.name)
 		}
 	}
+	log.Printf("Exhausted retries of serving request in cluster %v\n", c.name)
 	return
 }
 
