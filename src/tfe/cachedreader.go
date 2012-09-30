@@ -17,7 +17,6 @@ type CachedReader struct {
 
 func (c *CachedReader) Read(p []byte) (n int, err error) {
 	err = nil
-	n = 0
 	if c.Closed {
 		err = errors.New("reader closed")
 		return
@@ -39,9 +38,11 @@ func (c *CachedReader) Read(p []byte) (n int, err error) {
 	if remaining <= space {
 		copy(p, c.Bytes[offset:])
 		c.Offset += remaining
+		n = remaining
 	} else {
 		copy(p, c.Bytes[offset:offset+space])
 		c.Offset += space
+		n = space
 	}
 	return
 }

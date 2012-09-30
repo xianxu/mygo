@@ -122,13 +122,15 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			// replace r.Body with CachedReader so if we need to retry, we can.
 			var err error
-			if r.Body, err = NewCachedReader(r.Body); err != nil {
-				// if we can't read request body, just fail
-				log.Printf("Error occurred while reading request body for rule %v: %v\n",
-					ruleName, err.Error())
-				w.WriteHeader(503)
-				report(reporter, r, &SimpleResponseForStat{503,0}, nil, microTilNow(then))
-				return
+			if r.Body != nil {
+				if r.Body, err = NewCachedReader(r.Body); err != nil {
+					// if we can't read request body, just fail
+					log.Printf("Error occurred while reading request body for rule %v: %v\n",
+						ruleName, err.Error())
+					w.WriteHeader(503)
+					report(reporter, r, &SimpleResponseForStat{503,0}, nil, microTilNow(then))
+					return
+				}
 			}
 
 			rawRsp, err := s.Serve(r)
@@ -155,7 +157,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 
-			// 2XX with body
+			// all other with body
 			_, err = io.Copy(w, rsp.Body)
 
 			// log error while copying
