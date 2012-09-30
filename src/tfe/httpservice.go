@@ -6,6 +6,10 @@ import (
 	"log"
 )
 
+var (
+	errReqType = errors.New("HttpService: expect *http.Request as request object.")
+)
+
 type HttpService struct {
 	http.RoundTripper
 	HostPort string // this service will rewrite request to this host port and binds allawable
@@ -18,7 +22,7 @@ func (h *HttpService) Serve(req interface{}) (rsp interface{}, err error) {
 	rsp = nil
 
 	if httpReq, ok = req.(*http.Request); !ok {
-		err = errors.New("HttpService: expect *http.Request as request object.")
+		err = errReqType
 		return
 	}
 

@@ -6,6 +6,11 @@ import (
 	"io/ioutil"
 )
 
+var (
+	errReaderClosed = errors.New("reader closed")
+	errNoData = errors.New("no data")
+)
+
 /*
 * Implements a Reader that can be repeated read.
  */
@@ -18,11 +23,11 @@ type CachedReader struct {
 func (c *CachedReader) Read(p []byte) (n int, err error) {
 	err = nil
 	if c.Closed {
-		err = errors.New("reader closed")
+		err = errReaderClosed
 		return
 	}
 	if c.Bytes == nil {
-		err = errors.New("no data")
+		err = errNoData
 		return
 	}
 
