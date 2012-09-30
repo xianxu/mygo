@@ -56,7 +56,7 @@ func (c *CachedReader) Reset() {
 	c.Closed = false
 }
 
-func NewCachedReader(b io.ReadCloser) (cr *CachedReader, err error) {
+func NewCachedReader(b io.Reader) (cr *CachedReader, err error) {
 	bytes, err := ioutil.ReadAll(b)
 	if err != nil {
 		return

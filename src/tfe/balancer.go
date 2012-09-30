@@ -62,13 +62,14 @@ func (h *HttpService) Serve(req interface{}) (rsp interface{}, err error) {
 	rsp, err = h.RoundTrip(httpReq)
 
 	// cache response body, in order to report stats on size
-	if rsp != nil {
-		httpRsp := rsp.(*http.Response)
-		if httpRsp.Body, err = NewCachedReader(httpRsp.Body); err != nil {
-			// if we can't read request body, just fail
-			log.Printf("Error occurred while reading response body: %v\n", err.Error())
-		}
-	}
+	// TODO: not sure why this is not working, e.g. seems io.Copy doesn't work with CachedReader
+	/*if rsp != nil {*/
+		/*httpRsp := rsp.(*http.Response)*/
+		/*if httpRsp.Body, err = NewCachedReader(httpRsp.Body); err != nil {*/
+			/*// if we can't read request body, just fail*/
+			/*log.Printf("Error occurred while reading response body: %v\n", err.Error())*/
+		/*}*/
+	/*}*/
 
 	return
 }
