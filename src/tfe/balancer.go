@@ -60,6 +60,16 @@ func (h *HttpService) Serve(req interface{}) (rsp interface{}, err error) {
 
 	/*log.Println("Http req sent by HttpService")*/
 	rsp, err = h.RoundTrip(httpReq)
+
+	// cache response body, in order to report stats on size
+	if rsp != nil {
+		httpRsp := rsp.(*http.Response)
+		if httpRsp.Body, err = NewCachedReader(httpRsp.Body); err != nil {
+			// if we can't read request body, just fail
+			log.Printf("Error occurred while reading response body: %v\n", err.Error())
+		}
+	}
+
 	return
 }
 
@@ -84,7 +94,9 @@ func (ns intSlice) average() float64 {
 	return float64(sum) / float64(len(ns))
 }
 
-type ServiceReporter func(interface{}, interface{}, error, int)
+type ServiceReporter interface {
+	Report(interface{}, interface{}, error, int)
+}
 
 type ServiceWithHistory struct {
 	service   Service
@@ -94,35 +106,43 @@ type ServiceWithHistory struct {
 	status        ServiceStatus // mutable field of service status
 	proberRunning int32         // mutable field of whether there's a prober running
 
-	reportTo ServiceReporter
+	reporter ServiceReporter
 	flaky    float64 // what's average latency to be considered flaky in micro
 	dead     float64 // what's average latency to be considered dead in micro
 }
 
-func NewServiceWithHistory(service Service, name string, reportTo ServiceReporter) *ServiceWithHistory {
+func NewServiceWithHistory(service Service, name string, reporter ServiceReporter) *ServiceWithHistory {
 	return &ServiceWithHistory{
 		service,
 		name,
 		gostrich.NewIntSampler(100),
 		SERVICE_ALIVE,
 		0,
-		reportTo,
+		reporter,
 		1000 * 1000,
 		9500 * 1000,
 	}
 }
 
+func timeMicro(then, now time.Time) int {
+	return (now.Second()-then.Second())*1000000 +
+		(now.Nanosecond()-then.Nanosecond())/1000
+}
+func microTilNow(then time.Time) int {
+	now := time.Now()
+	return (now.Second()-then.Second())*1000000 +
+		(now.Nanosecond()-then.Nanosecond())/1000
+}
+
 func (s *ServiceWithHistory) Serve(req interface{}) (rsp interface{}, err error) {
 	then := time.Now()
 	rsp, err = s.service.Serve(req)
-	now := time.Now()
 	// micro seconds
-	latency := (now.Second()-then.Second())*1000000 +
-		(now.Nanosecond()-then.Nanosecond())/1000
+	latency := microTilNow(then)
 
 	// collect stats before adjusting latency
-	if s.reportTo != nil {
-		s.reportTo(req, rsp, err, latency)
+	if s.reporter != nil {
+		s.reporter.Report(req, rsp, err, latency)
 	}
 
 	if err != nil {
@@ -205,7 +225,7 @@ type cluster struct {
 	services []*ServiceWithHistory
 	name     string
 	tries    int
-	reportTo ServiceReporter
+	reporter ServiceReporter
 	lock     sync.RWMutex
 }
 
@@ -235,14 +255,12 @@ func (c *cluster) serveOnce(req interface{}) (rsp interface{}, err error) {
 	}
 	rsp, err = s.Serve(req)
 
-	now := time.Now()
 	// micro seconds
-	latency := (now.Second()-then.Second())*1000000 +
-		(now.Nanosecond()-then.Nanosecond())/1000
+	latency := microTilNow(then)
 
 	// collect stats before adjusting latency
-	if c.reportTo != nil {
-		c.reportTo(req, rsp, err, latency)
+	if c.reporter != nil {
+		c.reporter.Report(req, rsp, err, latency)
 	}
 
 	return
@@ -261,12 +279,12 @@ func (c *cluster) Serve(req interface{}) (rsp interface{}, err error) {
 	return
 }
 
-func NewCluster(services []*ServiceWithHistory, name string, tries int, reportTo ServiceReporter) *cluster {
+func NewCluster(services []*ServiceWithHistory, name string, tries int, reporter ServiceReporter) *cluster {
 	return &cluster{
 		services,
 		name,
 		tries,
-		reportTo,
+		reporter,
 		sync.RWMutex{},
 	}
 }

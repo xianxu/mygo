@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 	"log"
+	"time"
 )
 
 type Rules []Rule
@@ -35,17 +36,20 @@ type Rule interface {
 	// name of this rule
 	GetName() string
 
+	// which service to use, this is the actual entity that is capable of handle http.Request
+	GetService() Service
+
 	// whether this rule handles this request
 	HandlesRequest(*http.Request) bool
 
 	// mutate request
 	TransformRequest(*http.Request)
 
-	// which service to use, this is the actual entity that is capable of handle request
-	GetService() Service
-
 	// mutate response
 	TransformResponse(*http.Response)
+
+	// get a reporter to report overall response stats
+	GetServiceReporter() ServiceReporter
 }
 
 /*
@@ -60,6 +64,7 @@ type PrefixRewriteRule struct {
 	ProxiedAttachHeaders map[string][]string
 	//TODO: how to enforce some type checking, we don't want any service, but some HttpService
 	Service Service
+	Reporter ServiceReporter
 }
 
 func (p *PrefixRewriteRule) HandlesRequest(r *http.Request) bool {
@@ -90,15 +95,28 @@ func (p *PrefixRewriteRule) GetName() string {
 	return p.Name
 }
 
+func (p *PrefixRewriteRule) GetServiceReporter() ServiceReporter {
+	return p.Reporter
+}
+
+func report(reporter ServiceReporter, req *http.Request, rsp interface {}, err error, l int){
+	if reporter != nil {
+		reporter.Report(req, rsp, err, l)
+	}
+}
+
 func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	then := time.Now()
 	for _, rule := range ([]Rule)(*rs) {
 		if rule.HandlesRequest(r) {
 			ruleName := rule.GetName()
 			rule.TransformRequest(r)
 			s := rule.GetService()
+			reporter := rule.GetServiceReporter()
 			if s == nil {
 				log.Printf("No service defined for rule %v\n", ruleName)
 				w.WriteHeader(404)
+				report(reporter, r, &SimpleResponseForStat{404,0}, nil, microTilNow(then))
 				return
 			}
 
@@ -109,6 +127,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				log.Printf("Error occurred while reading request body for rule %v: %v\n",
 					ruleName, err.Error())
 				w.WriteHeader(503)
+				report(reporter, r, &SimpleResponseForStat{503,0}, nil, microTilNow(then))
 				return
 			}
 
@@ -117,6 +136,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Printf("Error occurred while proxying for rule %v: %v\n", ruleName, err.Error())
 				w.WriteHeader(503)
+				report(reporter, r, &SimpleResponseForStat{503,0}, nil, microTilNow(then))
 				return
 			}
 
@@ -131,6 +151,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			if rsp != nil && rsp.StatusCode >= 300 && rsp.StatusCode < 400 {
 				// if redirects
+				report(reporter, r, rsp, nil, microTilNow(then))
 				return
 			}
 
@@ -140,9 +161,11 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			// log error while copying
 			if err != nil {
 				// TODO, shouldn't happen, but it does happen :S
+				// TODO, stats report
 				log.Printf("err while piping bytes for rule %v: %v\n", ruleName, err)
 			}
 
+			report(reporter, r, rsp, nil, microTilNow(then))
 			return
 		}
 	}
@@ -151,43 +174,99 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func HttpStats(stats gostrich.Stats) func(interface{}, interface{}, error, int) {
-	counterReq := stats.Counter("req")
-	counterSucc := stats.Counter("req/success")
-	counterFail := stats.Counter("req/fail")
-	LatencyStat := stats.Statistics("req/latency")
+/*
+* Simple struct used to carry enough information for stats reporting purpose
+*/
+type SimpleResponseForStat struct {
+	StatusCode int
+	ContentLength int
+}
 
-	counter1xx := stats.Counter("rsp/1xx")
-	counter2xx := stats.Counter("rsp/2xx")
-	counter3xx := stats.Counter("rsp/3xx")
-	counter4xx := stats.Counter("rsp/4xx")
-	counter5xx := stats.Counter("rsp/5xx")
-	counterRst := stats.Counter("rsp/rst")
+type HttpStatsReporter struct {
+	counterReq, counterSucc, counterFail, counterRspNil, counterRspTypeErr gostrich.Counter
+	counter1xx, counter2xx, counter3xx, counter4xx, counter5xx, counterRst gostrich.Counter
+	reqLatencyStat, sizeStat gostrich.IntSampler
+	size1xx, size2xx, size3xx, size4xx, size5xx, sizeRst gostrich.IntSampler
+}
 
-	return func(rawReq interface{}, rawRsp interface{}, err error, micro int) {
-		/*req := rawReq.(*http.Request)*/
-		counterReq.Incr(1)
-		if err != nil {
-			counterFail.Incr(1)
-		} else {
-			counterSucc.Incr(1)
-			rsp := rawRsp.(*http.Response)
-			code := rsp.StatusCode
-			switch {
-			case code >= 100 && code < 200:
-				counter1xx.Incr(1)
-			case code >= 200 && code < 300:
-				counter2xx.Incr(1)
-			case code >= 300 && code < 400:
-				counter3xx.Incr(1)
-			case code >= 400 && code < 500:
-				counter4xx.Incr(1)
-			case code >= 500 && code < 600:
-				counter5xx.Incr(1)
-			default:
-				counterRst.Incr(1)
+func NewHttpStatsReporter(stats gostrich.Stats) *HttpStatsReporter {
+	return &HttpStatsReporter {
+		counterReq: stats.Counter("req"),
+		counterSucc: stats.Counter("req/success"),
+		counterFail: stats.Counter("req/fail"),
+		reqLatencyStat: stats.Statistics("req/latency"),
+
+		sizeStat: stats.Statistics("rsp/size"),
+		counterRspNil: stats.Counter("rsp/nil"),
+		counterRspTypeErr: stats.Counter("rsp/type_err"),
+		counter1xx: stats.Counter("rsp/1xx"),
+		size1xx: stats.Statistics("rsp_size/1xx"),
+		counter2xx: stats.Counter("rsp/2xx"),
+		size2xx: stats.Statistics("rsp_size/2xx"),
+		counter3xx: stats.Counter("rsp/3xx"),
+		size3xx: stats.Statistics("rsp_size/3xx"),
+		counter4xx: stats.Counter("rsp/4xx"),
+		size4xx: stats.Statistics("rsp_size/4xx"),
+		counter5xx: stats.Counter("rsp/5xx"),
+		size5xx: stats.Statistics("rsp_size/5xx"),
+		counterRst: stats.Counter("rsp/rst"),
+		sizeRst: stats.Statistics("rsp_size/rst"),
+	}
+}
+
+func (h *HttpStatsReporter) Report(rawReq interface{}, rawRsp interface{}, err error, micro int) {
+	/*req := rawReq.(*http.Request)*/
+	h.reqLatencyStat.Observe(micro)
+	h.counterReq.Incr(1)
+
+	if err != nil {
+		h.counterFail.Incr(1)
+	} else {
+		h.counterSucc.Incr(1)
+
+		var code, size int
+
+		if rawRsp == nil {
+			h.counterRspNil.Incr(1)
+			log.Printf("Response passed to HttpStatsReporter is nil\n")
+			return
+		} else if rsp, ok := rawRsp.(*http.Response); ok {
+			code = rsp.StatusCode
+			// if cached, use cached size, otherwise rely on ContentLength, which is not reliable.
+			if body, ok := rsp.Body.(*CachedReader); ok {
+				size = len(body.Bytes)
+			} else {
+				size = int(rsp.ContentLength)
 			}
+		} else if rsp, ok := rawRsp.(*SimpleResponseForStat); ok {
+			code = rsp.StatusCode
+			size = rsp.ContentLength
+		} else {
+			h.counterRspTypeErr.Incr(1)
+			log.Printf("Response passed to HttpStatsReporter is not valid\n")
+			return
 		}
-		LatencyStat.Observe(micro)
+
+		h.sizeStat.Observe(size)
+		switch {
+		case code >= 100 && code < 200:
+			h.counter1xx.Incr(1)
+			h.size1xx.Observe(size)
+		case code >= 200 && code < 300:
+			h.counter2xx.Incr(1)
+			h.size2xx.Observe(size)
+		case code >= 300 && code < 400:
+			h.counter3xx.Incr(1)
+			h.size3xx.Observe(size)
+		case code >= 400 && code < 500:
+			h.counter4xx.Incr(1)
+			h.size4xx.Observe(size)
+		case code >= 500 && code < 600:
+			h.counter5xx.Incr(1)
+			h.size5xx.Observe(size)
+		default:
+			h.counterRst.Incr(1)
+			h.sizeRst.Observe(size)
+		}
 	}
 }

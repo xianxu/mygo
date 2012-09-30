@@ -4,6 +4,7 @@ import (
 	"tfe"
 	"time"
 	"log"
+	"gostrich"
 )
 
 func init() {
@@ -23,6 +24,7 @@ func init() {
 							Timeout: 1 * time.Second,
 							Retries: 1,
 						}),
+					Reporter: tfe.NewHttpStatsReporter(gostrich.StatsSingleton().Scoped("tfe-tco")),
 				},
 				&tfe.PrefixRewriteRule{
 					Name:              "tweetbutton",
@@ -40,6 +42,7 @@ func init() {
 							Timeout: 1 * time.Second,
 							Retries: 1,
 						}),
+					Reporter: tfe.NewHttpStatsReporter(gostrich.StatsSingleton().Scoped("tfe-tbapi")),
 				},
 			},
 		}

@@ -4,6 +4,7 @@ import (
 	"tfe"
 	"time"
 	"log"
+	"gostrich"
 )
 
 func init() {
@@ -34,6 +35,7 @@ func init() {
 							Timeout: 2 * time.Second,
 							Retries: 1,
 						}),
+					Reporter: tfe.NewHttpStatsReporter(gostrich.StatsSingleton().Scoped("tfe-tbapi-smf1-plaintext")),
 				},
 			},
 		}

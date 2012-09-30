@@ -18,12 +18,12 @@ func CreateStaticHttpCluster(config StaticHttpCluster) *cluster {
 	for i, h := range config.Hosts {
 		httpService := &HttpService{&http.Transport{}, h}
 		withTimeout := NewServiceWithTimeout(httpService, config.Timeout)
-		services[i] = NewServiceWithHistory(withTimeout, h, ServiceReporter(HttpStats(gostrich.StatsSingleton().Scoped(config.Name).Scoped(h))))
+		services[i] = NewServiceWithHistory(withTimeout, h, NewHttpStatsReporter(gostrich.StatsSingleton().Scoped(config.Name).Scoped(h)))
 	}
 	return NewCluster(
 		services,
 		config.Name,
 		config.Retries+1,
-		ServiceReporter(HttpStats(gostrich.StatsSingleton().Scoped(config.Name))))
+		NewHttpStatsReporter(gostrich.StatsSingleton().Scoped(config.Name)))
 
 }
