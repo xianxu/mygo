@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 	"log"
+	"strconv"
 	"time"
 )
 
@@ -148,6 +149,10 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			headers := w.Header()
 			for k, v := range rsp.Header {
 				headers[k] = v
+			}
+			if body, ok := rsp.Body.(*CachedReader); ok {
+				// output content length if we know it
+				headers["Content-Length"] = []string { strconv.Itoa(len(body.Bytes)) }
 			}
 			w.WriteHeader(rsp.StatusCode)
 
