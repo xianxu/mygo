@@ -14,6 +14,10 @@ import (
 	"time"
 )
 
+var (
+	contentLength0 = []string{"0"}
+)
+
 type Rules []Rule
 
 /*
@@ -106,6 +110,7 @@ func report(reporter ServiceReporter, req *http.Request, rsp interface{}, err er
 	}
 }
 
+// Tfe HTTP serving endpoint.
 func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	then := time.Now()
 	for _, rule := range ([]Rule)(*rs) {
@@ -114,8 +119,11 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			rule.TransformRequest(r)
 			s := rule.GetService()
 			reporter := rule.GetServiceReporter()
+			headers := w.Header()
+
 			if s == nil {
 				log.Printf("No service defined for rule %v\n", ruleName)
+				headers["Content-Length"] = contentLength0
 				w.WriteHeader(404)
 				report(reporter, r, &SimpleResponseForStat{404, 0}, nil, microTilNow(then))
 				return
@@ -128,6 +136,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					// if we can't read request body, just fail
 					log.Printf("Error occurred while reading request body for rule %v: %v\n",
 						ruleName, err.Error())
+					headers["Content-Length"] = contentLength0
 					w.WriteHeader(503)
 					report(reporter, r, &SimpleResponseForStat{503, 0}, nil, microTilNow(then))
 					return
@@ -138,6 +147,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 			if err != nil {
 				log.Printf("Error occurred while proxying for rule %v: %v\n", ruleName, err.Error())
+				headers["Content-Length"] = contentLength0
 				w.WriteHeader(503)
 				report(reporter, r, &SimpleResponseForStat{503, 0}, nil, microTilNow(then))
 				return
@@ -146,7 +156,6 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			rsp := rawRsp.(*http.Response)
 			rule.TransformResponse(rsp)
 
-			headers := w.Header()
 			for k, v := range rsp.Header {
 				headers[k] = v
 			}
@@ -177,6 +186,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	headers["Content-Length"] = contentLength0
 	w.WriteHeader(404)
 	return
 }

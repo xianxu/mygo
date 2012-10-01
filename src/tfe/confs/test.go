@@ -46,6 +46,11 @@ func init() {
 						}),
 					Reporter: tfe.NewHttpStatsReporter(gostrich.StatsSingleton().Scoped("tfe-tbapi")),
 				},
+				&tfe.PrefixRewriteRule{
+					Name:              "dead",
+					SourcePathPrefix:  "/dead/",
+					ProxiedPathPrefix: "/dead/",
+				},
 			},
 		}
 	})

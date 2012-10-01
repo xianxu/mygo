@@ -12,6 +12,11 @@ type StaticHttpCluster struct {
 	Timeout   time.Duration
 	Retries   int
 	ProberReq interface{}
+
+	// http transport config
+	DisableKeepAlives bool
+	DisableCompression bool
+	MaxIdleConnsPerHost int
 }
 
 func CreateStaticHttpCluster(config StaticHttpCluster) *cluster {
