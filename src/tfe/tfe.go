@@ -64,7 +64,7 @@ type PrefixRewriteRule struct {
 	ProxiedPathPrefix    string
 	ProxiedAttachHeaders map[string][]string
 	//TODO: how to enforce some type checking, we don't want any service, but some HttpService
-	Service Service
+	Service  Service
 	Reporter ServiceReporter
 }
 
@@ -100,7 +100,7 @@ func (p *PrefixRewriteRule) GetServiceReporter() ServiceReporter {
 	return p.Reporter
 }
 
-func report(reporter ServiceReporter, req *http.Request, rsp interface {}, err error, l int){
+func report(reporter ServiceReporter, req *http.Request, rsp interface{}, err error, l int) {
 	if reporter != nil {
 		reporter.Report(req, rsp, err, l)
 	}
@@ -117,7 +117,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if s == nil {
 				log.Printf("No service defined for rule %v\n", ruleName)
 				w.WriteHeader(404)
-				report(reporter, r, &SimpleResponseForStat{404,0}, nil, microTilNow(then))
+				report(reporter, r, &SimpleResponseForStat{404, 0}, nil, microTilNow(then))
 				return
 			}
 
@@ -129,7 +129,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					log.Printf("Error occurred while reading request body for rule %v: %v\n",
 						ruleName, err.Error())
 					w.WriteHeader(503)
-					report(reporter, r, &SimpleResponseForStat{503,0}, nil, microTilNow(then))
+					report(reporter, r, &SimpleResponseForStat{503, 0}, nil, microTilNow(then))
 					return
 				}
 			}
@@ -139,7 +139,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if err != nil {
 				log.Printf("Error occurred while proxying for rule %v: %v\n", ruleName, err.Error())
 				w.WriteHeader(503)
-				report(reporter, r, &SimpleResponseForStat{503,0}, nil, microTilNow(then))
+				report(reporter, r, &SimpleResponseForStat{503, 0}, nil, microTilNow(then))
 				return
 			}
 
@@ -152,7 +152,7 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 			if body, ok := rsp.Body.(*CachedReader); ok {
 				// output content length if we know it
-				headers["Content-Length"] = []string { strconv.Itoa(len(body.Bytes)) }
+				headers["Content-Length"] = []string{strconv.Itoa(len(body.Bytes))}
 			}
 			w.WriteHeader(rsp.StatusCode)
 
@@ -183,41 +183,41 @@ func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 /*
 * Simple struct used to carry enough information for stats reporting purpose
-*/
+ */
 type SimpleResponseForStat struct {
-	StatusCode int
+	StatusCode    int
 	ContentLength int
 }
 
 type HttpStatsReporter struct {
 	counterReq, counterSucc, counterFail, counterRspNil, counterRspTypeErr gostrich.Counter
 	counter1xx, counter2xx, counter3xx, counter4xx, counter5xx, counterRst gostrich.Counter
-	reqLatencyStat, sizeStat gostrich.IntSampler
-	size1xx, size2xx, size3xx, size4xx, size5xx, sizeRst gostrich.IntSampler
+	reqLatencyStat, sizeStat                                               gostrich.IntSampler
+	size1xx, size2xx, size3xx, size4xx, size5xx, sizeRst                   gostrich.IntSampler
 }
 
 func NewHttpStatsReporter(stats gostrich.Stats) *HttpStatsReporter {
-	return &HttpStatsReporter {
-		counterReq: stats.Counter("req"),
-		counterSucc: stats.Counter("req/success"),
-		counterFail: stats.Counter("req/fail"),
+	return &HttpStatsReporter{
+		counterReq:     stats.Counter("req"),
+		counterSucc:    stats.Counter("req/success"),
+		counterFail:    stats.Counter("req/fail"),
 		reqLatencyStat: stats.Statistics("req/latency"),
 
-		sizeStat: stats.Statistics("rsp/size"),
-		counterRspNil: stats.Counter("rsp/nil"),
+		sizeStat:          stats.Statistics("rsp/size"),
+		counterRspNil:     stats.Counter("rsp/nil"),
 		counterRspTypeErr: stats.Counter("rsp/type_err"),
-		counter1xx: stats.Counter("rsp/1xx"),
-		size1xx: stats.Statistics("rsp_size/1xx"),
-		counter2xx: stats.Counter("rsp/2xx"),
-		size2xx: stats.Statistics("rsp_size/2xx"),
-		counter3xx: stats.Counter("rsp/3xx"),
-		size3xx: stats.Statistics("rsp_size/3xx"),
-		counter4xx: stats.Counter("rsp/4xx"),
-		size4xx: stats.Statistics("rsp_size/4xx"),
-		counter5xx: stats.Counter("rsp/5xx"),
-		size5xx: stats.Statistics("rsp_size/5xx"),
-		counterRst: stats.Counter("rsp/rst"),
-		sizeRst: stats.Statistics("rsp_size/rst"),
+		counter1xx:        stats.Counter("rsp/1xx"),
+		size1xx:           stats.Statistics("rsp_size/1xx"),
+		counter2xx:        stats.Counter("rsp/2xx"),
+		size2xx:           stats.Statistics("rsp_size/2xx"),
+		counter3xx:        stats.Counter("rsp/3xx"),
+		size3xx:           stats.Statistics("rsp_size/3xx"),
+		counter4xx:        stats.Counter("rsp/4xx"),
+		size4xx:           stats.Statistics("rsp_size/4xx"),
+		counter5xx:        stats.Counter("rsp/5xx"),
+		size5xx:           stats.Statistics("rsp_size/5xx"),
+		counterRst:        stats.Counter("rsp/rst"),
+		sizeRst:           stats.Statistics("rsp_size/rst"),
 	}
 }
 

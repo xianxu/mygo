@@ -14,6 +14,10 @@ import (
 
 var (
 	TfeTimeout = TfeError("timeout")
+
+	// Setting ProberReq to this value, the prober will use last request that triggers a service
+	// being marked dead as the prober req.
+	ProberReqLastFail ProberReqLastFailType
 )
 
 type TfeError string
@@ -32,9 +36,13 @@ type Service interface {
 type ServiceStatus int32
 
 const (
-	SERVICE_ALIVE = ServiceStatus(0) // node will be queried normally
-	SERVICE_FLAKY = ServiceStatus(1) // node seems flaky, we will send lower traffic
-	SERVICE_DEAD  = ServiceStatus(8) // node seems dead, we will send even lower traffic
+	SERVICE_ALIVE = ServiceStatus(0) // Node will be queried normally
+	SERVICE_FLAKY = ServiceStatus(1) // Node seems flaky, we will send lower traffic
+
+	// Node seems dead, we will throw up to 100 times dice to avoid picking a dead node. given
+	// 10 server cluster and 9 dead, the probability of picking the one healthy is > 99.99% after
+	// 100 dice.
+	SERVICE_DEAD = ServiceStatus(100)
 )
 
 type intSlice []int
@@ -51,26 +59,32 @@ type ServiceReporter interface {
 	Report(interface{}, interface{}, error, int)
 }
 
+type ProberReqLastFailType int
+
 type ServiceWithHistory struct {
 	service   Service
-	name      string              // human readable name
-	latencies gostrich.IntSampler // keeps track of host latency, in micro seconds
+	name      string              // Human readable name
+	latencies gostrich.IntSampler // Keeps track of host latency, in micro seconds
 
-	status        ServiceStatus // mutable field of service status
-	proberRunning int32         // mutable field of whether there's a prober running
+	status        ServiceStatus // Mutable field of service status
+	proberRunning int32         // Mutable field of whether there's a prober running
+	proberReq     interface{}   // Request used to probe. If nil, no probing's attempted. If this
+	// is proberReqLastFail, last failed request's used. Note for writes
+	// this is generally NOT what you want.
 
 	reporter ServiceReporter
-	flaky    float64 // what's average latency to be considered flaky in micro
-	dead     float64 // what's average latency to be considered dead in micro
+	flaky    float64 // What's average latency to be considered flaky in micro
+	dead     float64 // What's average latency to be considered dead in micro
 }
 
-func NewServiceWithHistory(service Service, name string, reporter ServiceReporter) *ServiceWithHistory {
+func NewServiceWithHistory(service Service, name string, reporter ServiceReporter, proberReq interface{}) *ServiceWithHistory {
 	return &ServiceWithHistory{
 		service,
 		name,
 		gostrich.NewIntSampler(100),
 		SERVICE_ALIVE,
 		0,
+		proberReq,
 		reporter,
 		1000 * 1000,
 		9500 * 1000,
@@ -109,21 +123,31 @@ func (s *ServiceWithHistory) Serve(req interface{}) (rsp interface{}, err error)
 	switch {
 	case avg > s.dead:
 		atomic.StoreInt32((*int32)(&s.status), int32(SERVICE_DEAD))
-		// start prober to probe dead node, if there's no prober running
-		if atomic.CompareAndSwapInt32((*int32)(&s.proberRunning), 0, 1) {
-			go func() {
-				log.Printf("Service %v gone bad, start probing\n", s.name)
-				// probe every 1 second
-				for {
-					time.Sleep(1 * time.Second)
-					log.Printf("Service %v is dead, probing..", s.name)
-					s.Serve(req) // don't care about result
-					if atomic.LoadInt32((*int32)(&s.status)) < int32(SERVICE_DEAD) {
-						log.Printf("Service %v recovered\n", s.name)
-						break
+		// start prober to probe dead node, if:
+		//   proberReq is set and
+		//   there's no prober running
+		if s.proberReq != nil {
+			if atomic.CompareAndSwapInt32((*int32)(&s.proberRunning), 0, 1) {
+				go func() {
+					log.Printf("Service %v gone bad, start probing\n", s.name)
+					// probe every 1 second
+					for {
+						time.Sleep(1 * time.Second)
+						log.Printf("Service %v is dead, probing..", s.name)
+						if _, ok := s.proberReq.(ProberReqLastFailType); ok {
+							s.Serve(req)
+						} else {
+							s.Serve(s.proberReq)
+						}
+						if atomic.LoadInt32((*int32)(&s.status)) < int32(SERVICE_DEAD) {
+							log.Printf("Service %v recovered\n", s.name)
+							// clear flag
+							atomic.StoreInt32((*int32)(&s.proberRunning), 0)
+							break
+						}
 					}
-				}
-			}()
+				}()
+			}
 		}
 	case avg > s.flaky:
 		atomic.StoreInt32((*int32)(&s.status), int32(SERVICE_FLAKY))

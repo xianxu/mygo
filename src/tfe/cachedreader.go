@@ -8,7 +8,7 @@ import (
 
 var (
 	errReaderClosed = errors.New("reader closed")
-	errNoData = errors.New("no data")
+	errNoData       = errors.New("no data")
 )
 
 /*

@@ -7,10 +7,11 @@ import (
 )
 
 type StaticHttpCluster struct {
-	Name    string
-	Hosts   []string
-	Timeout time.Duration
-	Retries int
+	Name      string
+	Hosts     []string
+	Timeout   time.Duration
+	Retries   int
+	ProberReq interface{}
 }
 
 func CreateStaticHttpCluster(config StaticHttpCluster) *cluster {
@@ -18,7 +19,7 @@ func CreateStaticHttpCluster(config StaticHttpCluster) *cluster {
 	for i, h := range config.Hosts {
 		httpService := &HttpService{&http.Transport{}, h}
 		withTimeout := NewServiceWithTimeout(httpService, config.Timeout)
-		services[i] = NewServiceWithHistory(withTimeout, h, NewHttpStatsReporter(gostrich.StatsSingleton().Scoped(config.Name).Scoped(h)))
+		services[i] = NewServiceWithHistory(withTimeout, h, NewHttpStatsReporter(gostrich.StatsSingleton().Scoped(config.Name).Scoped(h)), config.ProberReq)
 	}
 	return NewCluster(
 		services,

@@ -2,6 +2,7 @@ package tfe
 
 import (
 	"strings"
+	"log"
 )
 
 var (
@@ -23,14 +24,18 @@ func GetRules(name string) func() map[string]Rules {
 	return func() map[string]Rules {
 		result := make(map[string]Rules)
 		for _, n := range names {
-			rules := confs[n]()
-			for port, r := range rules {
-				if rs, ok := result[port]; ok {
-					//TODO: duplication detection
-					result[port] = append([]Rule(rs), []Rule(r)...)
-				} else {
-					result[port] = r
+			if fn, ok := confs[n]; ok {
+				rules := fn()
+				for port, r := range rules {
+					if rs, ok := result[port]; ok {
+						//TODO: duplication detection
+						result[port] = append([]Rule(rs), []Rule(r)...)
+					} else {
+						result[port] = r
+					}
 				}
+			} else {
+				log.Printf("Unknown rule named %v", n)
 			}
 		}
 		return result

@@ -21,8 +21,9 @@ func init() {
 							Hosts: []string{
 								"t.co",
 							},
-							Timeout: 1 * time.Second,
-							Retries: 1,
+							Timeout:   1 * time.Second,
+							Retries:   1,
+							ProberReq: tfe.ProberReqLastFail,
 						}),
 					Reporter: tfe.NewHttpStatsReporter(gostrich.StatsSingleton().Scoped("tfe-tco")),
 				},
@@ -39,8 +40,9 @@ func init() {
 							Hosts: []string{
 								"urls-real.api.twitter.com",
 							},
-							Timeout: 1 * time.Second,
-							Retries: 1,
+							Timeout:   1 * time.Second,
+							Retries:   1,
+							ProberReq: tfe.ProberReqLastFail,
 						}),
 					Reporter: tfe.NewHttpStatsReporter(gostrich.StatsSingleton().Scoped("tfe-tbapi")),
 				},
