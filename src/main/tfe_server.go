@@ -22,6 +22,7 @@ var (
 	cpuProfile   = flag.String("cpuprofile", "", "Write cpu profile to file")
 	readTimeout  = flag.Duration("read_timeout", 10*time.Second, "Read timeout")
 	writeTimeout = flag.Duration("write_timeout", 10*time.Second, "Write timeout")
+	portOffset   = flag.Int("port_offset", 0, "Offset serving port by this much. This is used to start up multiple tfe(s) on same host")
 )
 
 //TODO tests:
@@ -32,6 +33,8 @@ var (
 
 func main() {
 	flag.Parse()
+	gostrich.PortOffset = *portOffset
+
 	ncpu := *numCPU
 	if ncpu == 0 {
 		ncpu = runtime.NumCPU()
@@ -48,9 +51,9 @@ func main() {
 		defer pprof.StopCPUProfile()
 	}
 
-	log.Printf("Starting TFE with rule: %v, cpu: %v, read timeout: %v, write timeout: %v",
-		*conf, ncpu, *readTimeout, *writeTimeout)
-	theTfe := &tfe.Tfe{tfe.GetRules(*conf)()}
+	log.Printf("Starting TFE with rule: %v, cpu: %v, read timeout: %v, write timeout: %v, with port_offset: %v",
+		*conf, ncpu, *readTimeout, *writeTimeout, *portOffset)
+	theTfe := &tfe.Tfe{tfe.GetRules(*conf, *portOffset)()}
 	for binding, rules := range theTfe.BindingToRules {
 		server := http.Server{
 			binding,

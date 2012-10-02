@@ -113,13 +113,13 @@ func report(reporter ServiceReporter, req *http.Request, rsp interface{}, err er
 // Tfe HTTP serving endpoint.
 func (rs *Rules) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	then := time.Now()
+	headers := w.Header()
 	for _, rule := range ([]Rule)(*rs) {
 		if rule.HandlesRequest(r) {
 			ruleName := rule.GetName()
 			rule.TransformRequest(r)
 			s := rule.GetService()
 			reporter := rule.GetServiceReporter()
-			headers := w.Header()
 
 			if s == nil {
 				log.Printf("No service defined for rule %v\n", ruleName)

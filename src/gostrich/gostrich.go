@@ -13,7 +13,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
-
+	"strconv"
 	"log"
 )
 
@@ -27,11 +27,18 @@ var (
 	startUpTime        = time.Now().Unix() // start up time
 
 	// command line arguments that can be used to customize this module's singleton
-	adminPort       = flag.String("admin_port", "8300", "admin port")
+	adminPort       = flag.Int("admin_port", 8300, "admin port")
+	debugPort       = flag.Int("debug_port", 6300, "debug port")
 	jsonLineBreak   = flag.Bool("json_line_break", true, "whether break lines for json")
 	statsSampleSize = flag.Int("stats_sample_size", 1001, "how many samples to keep for stats")
+
+	// offset of admin/debug port. A client is to provide proper flags.
+	PortOffset int
 )
 
+/*
+ * An Admin provides a start up method and get root of stats collector.
+ */
 type Admin interface {
 	StartToLive() error
 	GetStats() Stats
@@ -499,9 +506,9 @@ func (stats *statsRecord) GetStats() Stats {
 /*
  * Blocks current coroutine. Call http /shutdown to shutdown.
  */
-func (stats *statsRecord) StartToLive(adminPort *string, jsonLineBreak *bool) error {
+func (stats *statsRecord) StartToLive(adminPort int, jsonLineBreak *bool) error {
 	// only start a single copy
-	statsHttpImpl := &statsHttp{stats, ":" + *adminPort}
+	statsHttpImpl := &statsHttp{stats, ":" + strconv.Itoa(adminPort)}
 	statsJson := &statsHttpJson{statsHttpImpl, *jsonLineBreak}
 	statsTxt := (*statsHttpTxt)(statsHttpImpl)
 
@@ -554,9 +561,9 @@ func StatsSingleton() Stats {
 func StartToLive() error {
 	// starts up debugging server
 	go func() {
-		log.Println(http.ListenAndServe(":6060", nil))
+		log.Println(http.ListenAndServe(":"+strconv.Itoa(*debugPort+PortOffset), nil))
 	}()
 	//making sure stats are created.
 	StatsSingleton()
-	return statsSingleton.StartToLive(adminPort, jsonLineBreak)
+	return statsSingleton.StartToLive(*adminPort+PortOffset, jsonLineBreak)
 }

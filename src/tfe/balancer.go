@@ -13,7 +13,7 @@ import (
  */
 
 var (
-	TfeTimeout = TfeError("timeout")
+	TfeTimeout = TfeError("tfe timeout")
 
 	// Setting ProberReq to this value, the prober will use last request that triggers a service
 	// being marked dead as the prober req.
@@ -39,15 +39,13 @@ const (
 	SERVICE_ALIVE = ServiceStatus(0) // Node will be queried normally
 	SERVICE_FLAKY = ServiceStatus(1) // Node seems flaky, we will send lower traffic
 
-	// Node seems dead, we will throw up to 100 times dice to avoid picking a dead node. given
-	// 10 server cluster and 9 dead, the probability of picking the one healthy is > 99.99% after
-	// 100 dice.
+	// When node seems dead, we dice throw upto 100 times to avoid picking a dead node. Given
+	// 10 server cluster and 9 dead, the probability of not picking one dead is > 99.99% after
+	// 100 dice. It'll be better in real situation.
 	SERVICE_DEAD = ServiceStatus(100)
 )
 
-type intSlice []int
-
-func (ns intSlice) average() float64 {
+func average(ns []int) float64 {
 	sum := 0.0
 	for _, v := range ns {
 		sum += float64(v)
@@ -61,20 +59,24 @@ type ServiceReporter interface {
 
 type ProberReqLastFailType int
 
+// Wrapping on top of a Service, keeping track service history for load balancing purpose.
 type ServiceWithHistory struct {
-	service   Service
+	service   Service             // underlying service.
 	name      string              // Human readable name
 	latencies gostrich.IntSampler // Keeps track of host latency, in micro seconds
 
 	status        ServiceStatus // Mutable field of service status
 	proberRunning int32         // Mutable field of whether there's a prober running
-	proberReq     interface{}   // Request used to probe. If nil, no probing's attempted. If this
-	// is proberReqLastFail, last failed request's used. Note for writes
-	// this is generally NOT what you want.
 
-	reporter ServiceReporter
-	flaky    float64 // What's average latency to be considered flaky in micro
-	dead     float64 // What's average latency to be considered dead in micro
+	// Request used to probe. If nil, no probing's attempted. If this is proberReqLastFail,
+	// last failed request's used. Note: for writes this is generally NOT what you want.
+	proberReq interface{}
+
+	reporter ServiceReporter // where to report service status, gostrich thing
+
+	// the following are specific limit of what's considered flaky/dead for the service
+	flaky float64 // What's average latency to be considered flaky in micro
+	dead  float64 // What's average latency to be considered dead in micro
 }
 
 func NewServiceWithHistory(service Service, name string, reporter ServiceReporter, proberReq interface{}) *ServiceWithHistory {
@@ -91,10 +93,6 @@ func NewServiceWithHistory(service Service, name string, reporter ServiceReporte
 	}
 }
 
-func timeMicro(then, now time.Time) int {
-	return (now.Second()-then.Second())*1000000 +
-		(now.Nanosecond()-then.Nanosecond())/1000
-}
 func microTilNow(then time.Time) int {
 	now := time.Now()
 	return (now.Second()-then.Second())*1000000 +
@@ -112,12 +110,13 @@ func (s *ServiceWithHistory) Serve(req interface{}) (rsp interface{}, err error)
 		s.reporter.Report(req, rsp, err, latency)
 	}
 
+	// adjust latency on failure to be 10 sec
 	if err != nil {
 		latency = 10 * 1000000
 	}
 
 	s.latencies.Observe(latency)
-	avg := intSlice(s.latencies.Sampled()).average()
+	avg := average(s.latencies.Sampled())
 
 	// change service state
 	switch {
@@ -130,18 +129,18 @@ func (s *ServiceWithHistory) Serve(req interface{}) (rsp interface{}, err error)
 			if atomic.CompareAndSwapInt32((*int32)(&s.proberRunning), 0, 1) {
 				go func() {
 					log.Printf("Service %v gone bad, start probing\n", s.name)
-					// probe every 1 second
+					// probe every 5 seconds
 					for {
-						time.Sleep(1 * time.Second)
+						time.Sleep(5 * time.Second)
 						log.Printf("Service %v is dead, probing..", s.name)
-						if _, ok := s.proberReq.(ProberReqLastFailType); ok {
+						switch s.proberReq.(type) {
+						case ProberReqLastFailType:
 							s.Serve(req)
-						} else {
+						default:
 							s.Serve(s.proberReq)
 						}
 						if atomic.LoadInt32((*int32)(&s.status)) < int32(SERVICE_DEAD) {
 							log.Printf("Service %v recovered\n", s.name)
-							// clear flag
 							atomic.StoreInt32((*int32)(&s.proberRunning), 0)
 							break
 						}
@@ -157,6 +156,7 @@ func (s *ServiceWithHistory) Serve(req interface{}) (rsp interface{}, err error)
 	return
 }
 
+// Wrapper of a service that times out
 type serviceWithTimeout struct {
 	service Service
 	timeout time.Duration
@@ -178,11 +178,11 @@ func (s *serviceWithTimeout) Serve(req interface{}) (rsp interface{}, err error)
 	rsp = nil
 
 	tick := time.After(s.timeout)
-	done := make(chan *responseAndError)
+	done := make(chan responseAndError)
 
 	go func() {
 		rsp, err = s.service.Serve(req)
-		done <- &responseAndError{rsp, err}
+		done <- responseAndError{rsp, err}
 	}()
 
 	select {
@@ -196,18 +196,14 @@ func (s *serviceWithTimeout) Serve(req interface{}) (rsp interface{}, err error)
 }
 
 /*
- * cluster can be used where host/port information itself is not in the request
+ * A cluster represents a load balanced set of services.
  */
 type cluster struct {
 	services []*ServiceWithHistory
 	name     string
-	tries    int
-	reporter ServiceReporter
-	lock     sync.RWMutex
-}
-
-type LoadBalancer interface {
-	Serve(req interface{}) (rsp interface{}, err error)
+	tries    int             // if there's failure, retry another host
+	reporter ServiceReporter // stats reporter of how cluster, rolled up from each host
+	lock     sync.RWMutex    // guard services
 }
 
 func (c *cluster) serveOnce(req interface{}) (rsp interface{}, err error) {
@@ -224,19 +220,18 @@ func (c *cluster) serveOnce(req interface{}) (rsp interface{}, err error) {
 	}
 
 	// pick one random
-	s := c.services[time.Now().Nanosecond()%len(c.services)]
+	// ... Nanosecond() on linux only have precision of microsecond, thus use microsecond as dice
+	s := c.services[(time.Now().Nanosecond()/1000)%len(c.services)]
 
 	// adjust the pick by the healthiness of the node
 	for retries := 0; atomic.LoadInt32((*int32)(&s.status)) > int32(retries); retries += 1 {
-		s = c.services[time.Now().Nanosecond()%len(c.services)]
+		s = c.services[(time.Now().Nanosecond()/1000)%len(c.services)]
 	}
 	rsp, err = s.Serve(req)
 
-	// micro seconds
-	latency := microTilNow(then)
-
 	// collect stats before adjusting latency
 	if c.reporter != nil {
+		latency := microTilNow(then)
 		c.reporter.Report(req, rsp, err, latency)
 	}
 
@@ -249,7 +244,7 @@ func (c *cluster) Serve(req interface{}) (rsp interface{}, err error) {
 		if err == nil {
 			return
 		} else {
-			log.Printf("Error serving request in cluster %v\n", c.name)
+			log.Printf("Error serving request in cluster %v. Error is: %v\n", c.name, err)
 		}
 	}
 	log.Printf("Exhausted retries of serving request in cluster %v\n", c.name)
