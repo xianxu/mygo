@@ -1,0 +1,27 @@
+import os
+import os.path
+import copy
+import datetime
+
+import re
+
+tbapi = {
+    'name': 'tbapi',
+    'role': 'tbapi',
+    'cluster': 'smf1',
+    'instances': 1,
+    'package': ('tbapi', 'tbapi', 1),
+    'task': {
+      'production': False,
+      'daemon': False,
+      'start_command': 'chmod 755 ./tweetbutton; ./tweetbutton -binding=:%port:http% -admin_port=%port:admin% -cassandras=smf1-aup-22-sr4,smf1-auv-34-sr4,smf1-aux-03-sr2,smf1-aux-22-sr3,smf1-ava-14-sr2,smf1-ava-14-sr3,smf1-avb-08-sr3,smf1-avb-34-sr3,smf1-avc-14-sr2,smf1-avc-37-sr2,smf1-avd-03-sr3,smf1-avd-26-sr3,smf1-ave-14-sr2,smf1-ave-19-sr2,smf1-ave-22-sr3,smf1-awb-26-sr3,smf1-awb-29-sr2,smf1-awb-29-sr3,smf1-awb-34-sr2,smf1-awb-34-sr3,smf1-awb-37-sr2,smf1-awb-37-sr3,smf1-awc-03-sr3,smf1-awc-08-sr3,smf1-awc-11-sr2,smf1-awc-11-sr3,smf1-awd-26-sr3,smf1-awd-29-sr3,smf1-awd-34-sr2,smf1-awd-34-sr3,smf1-awd-37-sr2,smf1-awd-37-sr3,smf1-awg-14-sr2',
+      'num_cpus': 4,
+      'ram_mb': 100,
+      'disk_mb': 100
+    },
+    'update_config': {
+      'batchSize': 1
+    }
+  }
+
+jobs = [tbapi]

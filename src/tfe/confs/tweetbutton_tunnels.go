@@ -5,6 +5,7 @@ import (
 	"time"
 	"log"
 	"gostrich"
+	"rpcx"
 )
 
 func init() {
@@ -34,7 +35,7 @@ func init() {
 							},
 							Timeout:   2 * time.Second,
 							Retries:   1,
-							ProberReq: tfe.ProberReqLastFail,
+							ProberReq: rpcx.ProberReqLastFail,
 						}),
 					Reporter: tfe.NewHttpStatsReporter(gostrich.StatsSingleton().Scoped("tweetbutton-tunneled")),
 				},

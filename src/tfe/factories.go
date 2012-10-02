@@ -4,6 +4,7 @@ import (
 	"time"
 	"gostrich"
 	"net/http"
+	"rpcx"
 )
 
 type StaticHttpCluster struct {
@@ -20,17 +21,24 @@ type StaticHttpCluster struct {
 	MaxIdleConnsPerHost int
 }
 
-func CreateStaticHttpCluster(config StaticHttpCluster) *cluster {
-	services := make([]*ServiceWithHistory, len(config.Hosts))
+func CreateStaticHttpCluster(config StaticHttpCluster) *rpcx.Cluster {
+	services := make([]*rpcx.Supervisor, len(config.Hosts))
 	for i, h := range config.Hosts {
 		httpService := &HttpService{&http.Transport{}, h, config.CacheResponseBody}
-		withTimeout := NewServiceWithTimeout(httpService, config.Timeout)
-		services[i] = NewServiceWithHistory(withTimeout, h, NewHttpStatsReporter(gostrich.StatsSingleton().Scoped(config.Name).Scoped(h)), config.ProberReq)
+		withTimeout := &rpcx.ServiceWithTimeout{httpService, config.Timeout}
+		services[i] = rpcx.NewSupervisor(
+			h,
+			withTimeout,
+			NewHttpStatsReporter(gostrich.StatsSingleton().Scoped(config.Name).Scoped(h)),
+			config.ProberReq,
+			nil, // no need to recreate client since http.Transport does those alrady
+		)
 	}
-	return NewCluster(
-		services,
-		config.Name,
-		config.Retries+1,
-		NewHttpStatsReporter(gostrich.StatsSingleton().Scoped(config.Name)))
+	return &rpcx.Cluster{
+		Name:     config.Name,
+		Services: services,
+		Retries:  config.Retries,
+		Reporter: NewHttpStatsReporter(gostrich.StatsSingleton().Scoped(config.Name)),
+	}
 
 }

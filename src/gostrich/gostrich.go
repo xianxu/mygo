@@ -15,6 +15,10 @@ import (
 	"time"
 	"strconv"
 	"log"
+	"runtime"
+	"os"
+	"runtime/pprof"
+	"strings"
 )
 
 // expose command line and memory stats. TODO: move over to gostrich so those can be viz-ed.
@@ -22,18 +26,22 @@ import _ "expvar"
 import _ "net/http/pprof"
 
 var (
-	statsSingletonLock = sync.Mutex{}
-	statsSingleton     *statsRecord        // singleton stats, that's "typically" what you need
-	startUpTime        = time.Now().Unix() // start up time
-
 	// command line arguments that can be used to customize this module's singleton
-	adminPort       = flag.Int("admin_port", 8300, "admin port")
-	debugPort       = flag.Int("debug_port", 6300, "debug port")
-	jsonLineBreak   = flag.Bool("json_line_break", true, "whether break lines for json")
-	statsSampleSize = flag.Int("stats_sample_size", 1001, "how many samples to keep for stats")
+	AdminPort       = flag.Int("admin_port", 8300, "admin port")
+	DebugPort       = flag.Int("debug_port", 6300, "debug port")
+	JsonLineBreak   = flag.Bool("json_line_break", true, "whether break lines for json")
+	StatsSampleSize = flag.Int("stats_sample_size", 1001, "how many samples to keep for stats")
+	PortOffset      = flag.Int("port_offset", 0, "Offset serving port by this much. This is used to start up multiple services on same host")
 
-	// offset of admin/debug port. A client is to provide proper flags.
-	PortOffset int
+	// debugging
+	NumCPU     = flag.Int("numcpu", 1, "Number of cpu to use. Use 0 to use all CPU")
+	CpuProfile = flag.String("cpuprofile", "", "Write cpu profile to file")
+
+	StartUpTime = time.Now().Unix() // start up time
+
+	// internal states
+	statsSingletonLock = sync.Mutex{}
+	statsSingleton     *statsRecord // singleton stats, that's "typically" what you need
 )
 
 /*
@@ -58,6 +66,7 @@ type Counter interface {
 type IntSampler interface {
 	Observe(f int)
 	Sampled() []int
+	Clear()
 }
 
 /*
@@ -112,6 +121,8 @@ type statsRecord struct {
 
 	samplerSize int // val
 	statistics  map[string]*intSamplerWithClone
+
+	shutdownHook func()
 }
 
 /*
@@ -170,6 +181,7 @@ func NewIntSamplerWithClone(size int) *intSamplerWithClone {
 func (s *intSampler) Observe(f int) {
 	count := atomic.AddInt64(&(s.count), 1)
 	atomic.AddInt64(&(s.sum), int64(f))
+	//TODO: do this atomically, reason what's in cache's int, instead of int64 is to use the sort
 	s.cache[int((count-1)%int64(s.length))] = f
 }
 
@@ -179,6 +191,15 @@ func (s *intSampler) Sampled() []int {
 		return s.cache[0:n]
 	}
 	return s.cache
+}
+
+func (s *intSampler) Clear() {
+	atomic.StoreInt64(&s.count, 0)
+	atomic.StoreInt64(&s.sum, 0)
+	// TODO: atomic?
+	for i := range s.cache {
+		s.cache[i] = 0
+	}
 }
 
 func (s *intSamplerWithClone) Observe(f int) {
@@ -195,6 +216,15 @@ func (s *intSamplerWithClone) Sampled() []int {
 	return s.cache
 }
 
+func (s *intSamplerWithClone) Clear() {
+	atomic.StoreInt64(&s.count, 0)
+	atomic.StoreInt64(&s.sum, 0)
+	// TODO: atomic?
+	for i := range s.cache {
+		s.cache[i] = 0
+	}
+}
+
 /*
  * Create a new stats object
  */
@@ -206,6 +236,7 @@ func NewStats(sampleSize int) *statsRecord {
 		make(map[string]func() string),
 		sampleSize,
 		make(map[string]*intSamplerWithClone),
+		nil,
 	}
 }
 
@@ -403,7 +434,7 @@ func (sr *statsHttpJson) breakLines() string {
 func freezeAndSort(s *intSamplerWithClone) (int64, int64, []int) {
 	// freeze, there might be a drift, we are fine
 	count := s.count
-	sum := s.sum
+	sum := atomic.LoadInt64(&s.sum)
 
 	// copy cache
 	copy(s.clonedCache, s.cache)
@@ -506,10 +537,10 @@ func (stats *statsRecord) GetStats() Stats {
 /*
  * Blocks current coroutine. Call http /shutdown to shutdown.
  */
-func (stats *statsRecord) StartToLive(adminPort int, jsonLineBreak *bool) error {
+func (stats *statsRecord) StartToLive(adminPort int, jsonLineBreak bool) error {
 	// only start a single copy
 	statsHttpImpl := &statsHttp{stats, ":" + strconv.Itoa(adminPort)}
-	statsJson := &statsHttpJson{statsHttpImpl, *jsonLineBreak}
+	statsJson := &statsHttpJson{statsHttpImpl, jsonLineBreak}
 	statsTxt := (*statsHttpTxt)(statsHttpImpl)
 
 	shutdown := make(chan int)
@@ -541,29 +572,77 @@ func (stats *statsRecord) StartToLive(adminPort int, jsonLineBreak *bool) error 
 	case <-shutdown:
 		log.Println("Shutdown requested")
 	}
+
+	if stats.shutdownHook != nil {
+		stats.shutdownHook()
+	}
 	return nil
 }
 
-func StatsSingleton() Stats {
+func StatsSingleton() *statsRecord {
 	statsSingletonLock.Lock()
 	defer statsSingletonLock.Unlock()
 	if statsSingleton == nil {
-		statsSingleton = NewStats(*statsSampleSize)
+		statsSingleton = NewStats(*StatsSampleSize)
 
 		// some basic stats
 		statsSingleton.AddGauge("uptime", func() float64 {
-			return float64(time.Now().Unix() - startUpTime)
+			return float64(time.Now().Unix() - StartUpTime)
 		})
 	}
 	return statsSingleton
 }
 
 func StartToLive() error {
+	ncpu := *NumCPU
+
+	log.Printf("Admin staring to live, with admin port of %v and debug port of %v with %v CPUs", *AdminPort+*PortOffset, *DebugPort+*PortOffset, ncpu)
+
+	if ncpu == 0 {
+		ncpu = runtime.NumCPU()
+	}
+	runtime.GOMAXPROCS(ncpu)
+
+	if *CpuProfile != "" {
+		log.Println("Enabling profiling")
+		f, err := os.Create(*CpuProfile)
+		if err != nil {
+			log.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+	}
+
 	// starts up debugging server
 	go func() {
-		log.Println(http.ListenAndServe(":"+strconv.Itoa(*debugPort+PortOffset), nil))
+		log.Println(http.ListenAndServe(":"+strconv.Itoa(*DebugPort+*PortOffset), nil))
 	}()
 	//making sure stats are created.
 	StatsSingleton()
-	return statsSingleton.StartToLive(*adminPort+PortOffset, jsonLineBreak)
+	statsSingleton.shutdownHook = func() {
+		if *CpuProfile != "" {
+			pprof.StopCPUProfile()
+		}
+		log.Printf("Shutdown gostrich.")
+	}
+	return statsSingleton.StartToLive(*AdminPort+*PortOffset, *JsonLineBreak)
+}
+
+func UpdatePort(address string, offset int) string {
+	parts := strings.Split(address, ":")
+	if len(parts) == 1 {
+		port, err := strconv.Atoi(parts[0])
+		if err != nil {
+			panic("unknown address format")
+		}
+		return strconv.Itoa(port + offset)
+	} else if len(parts) == 2 {
+		port, err := strconv.Atoi(parts[1])
+		if err != nil {
+			panic("unknown address format")
+		}
+		return parts[0] + ":" + strconv.Itoa(port+offset)
+	} else {
+		panic("unknown address format")
+	}
+	return ""
 }

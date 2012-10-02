@@ -5,6 +5,7 @@ import (
 	"time"
 	"log"
 	"gostrich"
+	"rpcx"
 )
 
 func init() {
@@ -23,7 +24,7 @@ func init() {
 							Name: "tweetbutton",
 							Hosts: []string{
 								/*"smf1-aea-35-sr2:8000",*/
-								"smf1-adz-03-sr3:8000",
+								/*"smf1-adz-03-sr3:8000",*/
 								"smf1-adj-27-sr4:8000",
 								"smf1-afo-35-sr4:8000",
 								"smf1-adz-19-sr2:8000",
@@ -34,7 +35,7 @@ func init() {
 							},
 							Timeout:             2 * time.Second,
 							Retries:             1,
-							ProberReq:           tfe.ProberReqLastFail,
+							ProberReq:           rpcx.ProberReqLastFail,
 							CacheResponseBody:   true,
 							MaxIdleConnsPerHost: 20,
 						}),
