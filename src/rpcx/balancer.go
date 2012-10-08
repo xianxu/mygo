@@ -321,7 +321,7 @@ type Cluster struct {
 	Reporter ServiceReporter // stats reporter of how cluster, rolled up from each host
 
 	// internals, default values' fine
-	Lock     sync.RWMutex    // guard services
+	Lock sync.RWMutex // guard services
 }
 
 func (c *Cluster) serveOnce(req interface{}, rsp interface{}, timeout time.Duration) (err error) {

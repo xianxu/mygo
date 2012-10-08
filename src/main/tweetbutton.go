@@ -14,12 +14,12 @@ import (
 )
 
 var (
-	readTimeout  = flag.Duration("read_timeout", 10*time.Second, "Read timeout")
-	writeTimeout = flag.Duration("write_timeout", 10*time.Second, "Write timeout")
-	binding      = flag.String("binding", ":8888", "Binding to serve tweetbutton count traffic")
-	cassandras   = flag.String("cassandras", "localhost:9160", "Cassandra hosts to use")
+	readTimeout      = flag.Duration("read_timeout", 10*time.Second, "Read timeout")
+	writeTimeout     = flag.Duration("write_timeout", 10*time.Second, "Write timeout")
+	binding          = flag.String("binding", ":8888", "Binding to serve tweetbutton count traffic")
+	cassandras       = flag.String("cassandras", "localhost:9160", "Cassandra hosts to use")
 	cassandraTimeout = flag.Duration("cassandra_timeout", 3*time.Second, "Cassandra timeout")
-	concurrency  = flag.Int("concurrency", 5, "How many Cassandra connection to open per Cassandra host")
+	concurrency      = flag.Int("concurrency", 5, "How many Cassandra connection to open per Cassandra host")
 
 	// intervals
 	path = &gassandra.ColumnPath{"SUM_ALLTIME", nil, []byte{0, 0, 0, 0, 0, 0, 0, 0}}
@@ -27,7 +27,7 @@ var (
 
 type ServerState struct {
 	countService rpcx.Service
-	timeout time.Duration
+	timeout      time.Duration
 }
 
 // The actual tweetbutton count logic
@@ -126,10 +126,10 @@ func main() {
 	newBinding := gostrich.UpdatePort(*binding, portOffset)
 
 	rs := rpcx.ReliableService{
-		Name: "tweetbutton",
-		Makers: makeAll(*cassandras),
+		Name:        "tweetbutton",
+		Makers:      makeAll(*cassandras),
 		Concurrency: *concurrency,
-		Stats: gostrich.StatsSingleton(),
+		Stats:       gostrich.StatsSingleton(),
 	}
 	cas := rpcx.NewReliableService(rs)
 
