@@ -78,16 +78,16 @@ const (
 	SERVICE_DEAD = ServiceStatus(100)
 )
 
-func average(ns []int) float64 {
+func average(ns []int64) float64 {
 	sum := 0.0
-	for _, v := range ns {
-		sum += float64(v)
+	for i := range ns {
+		sum += float64(atomic.LoadInt64(&ns[i]))
 	}
 	return float64(sum) / float64(len(ns))
 }
 
 type ServiceReporter interface {
-	Report(interface{}, interface{}, error, int)
+	Report(interface{}, interface{}, error, int64)
 }
 
 type ProberReqLastFailType int
@@ -172,10 +172,9 @@ func NewReplaceable(name string, service Service, reporter ServiceReporter, serv
 	}
 }
 
-func MicroTilNow(then time.Time) int {
+func MicroTilNow(then time.Time) int64 {
 	now := time.Now()
-	return (now.Second()-then.Second())*1000000 +
-		(now.Nanosecond()-then.Nanosecond())/1000
+	return int64((now.Second()-then.Second())*1000000 + (now.Nanosecond()-then.Nanosecond())/1000)
 }
 
 func (s *Supervisor) Serve(req interface{}, rsp interface{}, timeout time.Duration) (err error) {
@@ -381,7 +380,7 @@ func NewBasicStatsReporter(stats gostrich.Stats) *BasicStatsReporter {
 	}
 }
 
-func (r *BasicStatsReporter) Report(req interface{}, rsp interface{}, err error, micro int) {
+func (r *BasicStatsReporter) Report(req interface{}, rsp interface{}, err error, micro int64) {
 	r.reqLatencyStat.Observe(micro)
 	r.counterReq.Incr(1)
 	if err != nil {

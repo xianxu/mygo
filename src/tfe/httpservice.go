@@ -110,7 +110,7 @@ func NewHttpStatsReporter(stats gostrich.Stats) *HttpStatsReporter {
 	}
 }
 
-func (h *HttpStatsReporter) Report(rawReq interface{}, rawRsp interface{}, err error, micro int) {
+func (h *HttpStatsReporter) Report(rawReq interface{}, rawRsp interface{}, err error, micro int64) {
 	/*req := rawReq.(*http.Request)*/
 	h.reqLatencyStat.Observe(micro)
 	h.counterReq.Incr(1)
@@ -143,26 +143,26 @@ func (h *HttpStatsReporter) Report(rawReq interface{}, rawRsp interface{}, err e
 			return
 		}
 
-		h.sizeStat.Observe(size)
+		h.sizeStat.Observe(int64(size))
 		switch {
 		case code >= 100 && code < 200:
 			h.counter1xx.Incr(1)
-			h.size1xx.Observe(size)
+			h.size1xx.Observe(int64(size))
 		case code >= 200 && code < 300:
 			h.counter2xx.Incr(1)
-			h.size2xx.Observe(size)
+			h.size2xx.Observe(int64(size))
 		case code >= 300 && code < 400:
 			h.counter3xx.Incr(1)
-			h.size3xx.Observe(size)
+			h.size3xx.Observe(int64(size))
 		case code >= 400 && code < 500:
 			h.counter4xx.Incr(1)
-			h.size4xx.Observe(size)
+			h.size4xx.Observe(int64(size))
 		case code >= 500 && code < 600:
 			h.counter5xx.Incr(1)
-			h.size5xx.Observe(size)
+			h.size5xx.Observe(int64(size))
 		default:
 			h.counterRst.Incr(1)
-			h.sizeRst.Observe(size)
+			h.sizeRst.Observe(int64(size))
 		}
 	}
 }

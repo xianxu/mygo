@@ -7,18 +7,18 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"log"
 	"math"
 	"net/http"
+	"os"
+	"runtime"
+	"runtime/pprof"
 	"sort"
+	"strconv"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
-	"strconv"
-	"log"
-	"runtime"
-	"os"
-	"runtime/pprof"
-	"strings"
 )
 
 // expose command line and memory stats. TODO: move over to gostrich so those can be viz-ed.
@@ -64,8 +64,8 @@ type Counter interface {
  * Sampler maintains a sample of input stream of numbers.
  */
 type IntSampler interface {
-	Observe(f int)
-	Sampled() []int
+	Observe(f int64)
+	Sampled() []int64
 	Clear()
 }
 
@@ -80,13 +80,16 @@ type intSampler struct {
 	length int
 
 	// thread safe buffer
-	cache []int
+	cache []int64
 }
 
+/*
+ * This is just a intSampler with preallocated buffer that gostrich use internally
+ */
 type intSamplerWithClone struct {
 	intSampler
 	// cloned cache's used to do stats reporting, where we need to sort the content of cache.
-	clonedCache []int
+	clonedCache []int64
 }
 
 /*
@@ -122,7 +125,7 @@ type statsRecord struct {
 	samplerSize int // val
 	statistics  map[string]*intSamplerWithClone
 
-	shutdownHook func()
+	shutdownHook func()  //TODO: this is out of place, move it out.
 }
 
 /*
@@ -162,7 +165,7 @@ func NewIntSampler(size int) *intSampler {
 		0,
 		0,
 		size,
-		make([]int, size),
+		make([]int64, size),
 	}
 }
 
@@ -172,21 +175,22 @@ func NewIntSamplerWithClone(size int) *intSamplerWithClone {
 			0,
 			0,
 			size,
-			make([]int, size),
+			make([]int64, size),
 		},
-		make([]int, size),
+		make([]int64, size),
 	}
 }
 
-func (s *intSampler) Observe(f int) {
+func (s *intSampler) Observe(f int64) {
 	count := atomic.AddInt64(&(s.count), 1)
-	atomic.AddInt64(&(s.sum), int64(f))
-	//TODO: do this atomically, reason what's in cache's int, instead of int64 is to use the sort
-	s.cache[int((count-1)%int64(s.length))] = f
+	atomic.AddInt64(&(s.sum), f)
+	atomic.StoreInt64(&s.cache[int((count-1)%int64(s.length))], f)
 }
 
-func (s *intSampler) Sampled() []int {
-	n := s.count
+func (s *intSampler) Sampled() []int64 {
+	// TODO: what's returned is not thread safe, caller needs to use thread safe way to access its
+	// element, to be safe. It is provided to avoid allocating another cache.
+	n := atomic.AddInt64(&(s.count), 1)
 	if n < int64(s.length) {
 		return s.cache[0:n]
 	}
@@ -196,32 +200,8 @@ func (s *intSampler) Sampled() []int {
 func (s *intSampler) Clear() {
 	atomic.StoreInt64(&s.count, 0)
 	atomic.StoreInt64(&s.sum, 0)
-	// TODO: atomic?
 	for i := range s.cache {
-		s.cache[i] = 0
-	}
-}
-
-func (s *intSamplerWithClone) Observe(f int) {
-	count := atomic.AddInt64(&(s.count), 1)
-	atomic.AddInt64(&(s.sum), int64(f))
-	s.cache[int((count-1)%int64(s.length))] = f
-}
-
-func (s *intSamplerWithClone) Sampled() []int {
-	n := s.count
-	if n < int64(s.length) {
-		return s.cache[0:n]
-	}
-	return s.cache
-}
-
-func (s *intSamplerWithClone) Clear() {
-	atomic.StoreInt64(&s.count, 0)
-	atomic.StoreInt64(&s.sum, 0)
-	// TODO: atomic?
-	for i := range s.cache {
-		s.cache[i] = 0
+		atomic.StoreInt64(&s.cache[i], 0)
 	}
 }
 
@@ -364,7 +344,7 @@ type sortedValues struct {
 /*
  * Output a sorted array of float64 as percentile in Json format.
  */
-func sortedToJson(w http.ResponseWriter, array []int, count int64, sum int64) {
+func sortedToJson(w http.ResponseWriter, array []int64, count int64, sum int64) {
 	fmt.Fprintf(w, "{")
 	length := len(array)
 	l1 := length - 1
@@ -390,7 +370,7 @@ func sortedToJson(w http.ResponseWriter, array []int, count int64, sum int64) {
 /*
  * Output a sorted array of float64 as percentile in text format.
  */
-func sortedToTxt(w http.ResponseWriter, array []int, count int64, sum int64) {
+func sortedToTxt(w http.ResponseWriter, array []int64, count int64, sum int64) {
 	length := len(array)
 	l1 := length - 1
 	fmt.Fprintf(w, "(")
@@ -431,18 +411,19 @@ func (sr *statsHttpJson) breakLines() string {
 /*
  * High perf freeze content of a sampler and sort it
  */
-func freezeAndSort(s *intSamplerWithClone) (int64, int64, []int) {
+func freezeAndSort(s *intSamplerWithClone) (int64, int64, []int64) {
 	// freeze, there might be a drift, we are fine
-	count := s.count
+	count := atomic.LoadInt64(&s.count)
 	sum := atomic.LoadInt64(&s.sum)
 
 	// copy cache
+	// TODO: thread safe?
 	copy(s.clonedCache, s.cache)
 	v := s.clonedCache
 	if count < int64(s.length) {
 		v = s.clonedCache[0:int(count)]
 	}
-	sort.Ints(v)
+	sort.Sort(Int64Slice(v))
 	return count, sum, v
 }
 
@@ -645,4 +626,18 @@ func UpdatePort(address string, offset int) string {
 		panic("unknown address format")
 	}
 	return ""
+}
+
+// Int64 slice that allows sorting
+type Int64Slice []int64
+func (ints Int64Slice) Len() int {
+	return len([]int64(ints))
+}
+func (ints Int64Slice) Less(i, j int) bool {
+	slice := []int64(ints)
+	return slice[i] < slice[j]
+}
+func (ints Int64Slice) Swap(i, j int) {
+	slice := []int64(ints)
+	slice[i], slice[j] = slice[j], slice[i]
 }

@@ -103,7 +103,7 @@ func (p *PrefixRewriteRule) GetServiceReporter() rpcx.ServiceReporter {
 	return p.Reporter
 }
 
-func report(reporter rpcx.ServiceReporter, req *http.Request, rsp interface{}, err error, l int) {
+func report(reporter rpcx.ServiceReporter, req *http.Request, rsp interface{}, err error, l int64) {
 	if reporter != nil {
 		reporter.Report(req, rsp, err, l)
 	}
