@@ -21,7 +21,8 @@ import (
 	"time"
 )
 
-// expose command line and memory stats. TODO: move over to gostrich so those can be viz-ed.
+// expose command line and memory stats.
+// TODO: move those stats over to gostrich so those can be viz-ed?
 import _ "expvar"
 import _ "net/http/pprof"
 
@@ -30,18 +31,20 @@ var (
 	AdminPort       = flag.Int("admin_port", 8300, "admin port")
 	DebugPort       = flag.Int("debug_port", 6300, "debug port")
 	JsonLineBreak   = flag.Bool("json_line_break", true, "whether break lines for json")
-	StatsSampleSize = flag.Int("stats_sample_size", 1001, "how many samples to keep for stats")
-	PortOffset      = flag.Int("port_offset", 0, "Offset serving port by this much. This is used to start up multiple services on same host")
+	StatsSampleSize = flag.Int("stats_sample_size", 1001, "how many samples to keep for stats, " +
+	                           "to compute average etc.")
+	PortOffset      = flag.Int("port_offset", 0, "Offset serving port by this much. This is used " +
+	                           "to start up multiple services on same host")
 
 	// debugging
-	NumCPU     = flag.Int("numcpu", 1, "Number of cpu to use. Use 0 to use all CPU")
-	CpuProfile = flag.String("cpuprofile", "", "Write cpu profile to file")
+	NumCPU     = flag.Int("num_cpu", 1, "Number of cpu to use. Use 0 to use all CPU")
+	CpuProfile = flag.String("cpu_profile", "", "Write cpu profile to file")
 
 	StartUpTime = time.Now().Unix() // start up time
 
 	// internal states
-	statsSingletonLock = sync.Mutex{}
-	statsSingleton     *statsRecord // singleton stats, that's "typically" what you need
+	adminLock = sync.Mutex{}
+	admin     *adminServer // singleton stats, that's "typically" what you need
 )
 
 /*
@@ -50,6 +53,19 @@ var (
 type Admin interface {
 	StartToLive() error
 	GetStats() Stats
+}
+
+/*
+ * The interface used to collect various stats. It provides counters, gauges, labels and samples.
+ * It also provides a way to scope Stats collector to a prefixed domain. All implementation should
+ * be thread safe.
+ */
+type Stats interface {
+	Counter(name string) Counter
+	AddGauge(name string, gauge func() float64) bool
+	AddLabel(name string, label func() string) bool
+	Statistics(name string) IntSampler
+	Scoped(name string) Stats
 }
 
 /*
@@ -93,19 +109,6 @@ type intSamplerWithClone struct {
 }
 
 /*
- * The interface used to collect various stats. It provides counters, gauges, labels and samples.
- * It also provides a way to scope Stats collector to a prefixed domain. All implementation should
- * be thread safe.
- */
-type Stats interface {
-	Counter(name string) Counter
-	AddGauge(name string, gauge func() float64) bool
-	AddLabel(name string, label func() string) bool
-	Statistics(name string) IntSampler
-	Scoped(name string) Stats
-}
-
-/*
  * myInt64 will be a Counter.
  */
 type myInt64 int64
@@ -124,8 +127,11 @@ type statsRecord struct {
 
 	samplerSize int // val
 	statistics  map[string]*intSamplerWithClone
+}
 
-	shutdownHook func()  //TODO: this is out of place, move it out.
+type adminServer struct {
+	stats *statsRecord
+	shutdownHook func()
 }
 
 /*
@@ -187,10 +193,11 @@ func (s *intSampler) Observe(f int64) {
 	atomic.StoreInt64(&s.cache[int((count-1)%int64(s.length))], f)
 }
 
+// Note: what's returned is not thread safe, caller needs to use thread safe way to access its
+// element, such as atomic.LoadInt64 on each element, to be safe. It is provided to avoid
+// allocating another cache.
 func (s *intSampler) Sampled() []int64 {
-	// TODO: what's returned is not thread safe, caller needs to use thread safe way to access its
-	// element, to be safe. It is provided to avoid allocating another cache.
-	n := atomic.AddInt64(&(s.count), 1)
+	n := atomic.LoadInt64(&(s.count))
 	if n < int64(s.length) {
 		return s.cache[0:n]
 	}
@@ -216,7 +223,6 @@ func NewStats(sampleSize int) *statsRecord {
 		make(map[string]func() string),
 		sampleSize,
 		make(map[string]*intSamplerWithClone),
-		nil,
 	}
 }
 
@@ -333,9 +339,10 @@ func (c *myInt64) Incr(by int64) int64 {
 }
 
 func (c *myInt64) Get() int64 {
-	return int64(*c)
+	return atomic.LoadInt64((*int64)(c))
 }
 
+// represent sorted numbers, with a name
 type sortedValues struct {
 	name   string
 	values []float64
@@ -417,8 +424,9 @@ func freezeAndSort(s *intSamplerWithClone) (int64, int64, []int64) {
 	sum := atomic.LoadInt64(&s.sum)
 
 	// copy cache
-	// TODO: thread safe?
-	copy(s.clonedCache, s.cache)
+	for i := range s.cache {
+		s.clonedCache[i] = atomic.LoadInt64(&(s.cache[i]))
+	}
 	v := s.clonedCache
 	if count < int64(s.length) {
 		v = s.clonedCache[0:int(count)]
@@ -427,7 +435,11 @@ func freezeAndSort(s *intSamplerWithClone) (int64, int64, []int64) {
 	return count, sum, v
 }
 
+/*
+ * Admin HTTP handler Json endpoint.
+ */
 func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// no more stats can be created during reporting, existing stats can be updated.
 	sr.lock.RLock()
 	defer sr.lock.RUnlock()
 
@@ -474,7 +486,11 @@ func (sr *statsHttpJson) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, sr.breakLines()+"}"+sr.breakLines())
 }
 
+/*
+ * Admin HTTP handler txt endpoint.
+ */
 func (sr *statsHttpTxt) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	// no more stats can be created during reporting, existing stats can be updated.
 	sr.lock.RLock()
 	defer sr.lock.RUnlock()
 
@@ -515,12 +531,16 @@ func (stats *statsRecord) GetStats() Stats {
 	return stats
 }
 
+func (admin *adminServer) GetStats() Stats {
+	return admin.stats
+}
+
 /*
- * Blocks current coroutine. Call http /shutdown to shutdown.
+ * Blocks current goroutine. Call http /shutdown to shutdown.
  */
-func (stats *statsRecord) StartToLive(adminPort int, jsonLineBreak bool) error {
+func (admin *adminServer) StartToLive(adminPort int, jsonLineBreak bool, register func(*http.ServeMux)) error {
 	// only start a single copy
-	statsHttpImpl := &statsHttp{stats, ":" + strconv.Itoa(adminPort)}
+	statsHttpImpl := &statsHttp{admin.stats, ":" + strconv.Itoa(adminPort)}
 	statsJson := &statsHttpJson{statsHttpImpl, jsonLineBreak}
 	statsTxt := (*statsHttpTxt)(statsHttpImpl)
 
@@ -531,8 +551,14 @@ func (stats *statsRecord) StartToLive(adminPort int, jsonLineBreak bool) error {
 	mux.Handle("/stats.json", statsJson)
 	mux.Handle("/stats.txt", statsTxt)
 	mux.HandleFunc("/shutdown", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Bye\n")
 		shutdown <- 0
 	})
+
+	// register other handlers
+	if register != nil {
+		register(mux)
+	}
 
 	server := http.Server{
 		statsHttpImpl.address,
@@ -554,27 +580,31 @@ func (stats *statsRecord) StartToLive(adminPort int, jsonLineBreak bool) error {
 		log.Println("Shutdown requested")
 	}
 
-	if stats.shutdownHook != nil {
-		stats.shutdownHook()
+	if admin.shutdownHook != nil {
+		admin.shutdownHook()
 	}
 	return nil
 }
 
-func StatsSingleton() *statsRecord {
-	statsSingletonLock.Lock()
-	defer statsSingletonLock.Unlock()
-	if statsSingleton == nil {
-		statsSingleton = NewStats(*StatsSampleSize)
+func AdminServer() *adminServer {
+	adminLock.Lock()
+	defer adminLock.Unlock()
+	if admin == nil {
+		admin = &adminServer{ NewStats(*StatsSampleSize), nil }
 
 		// some basic stats
-		statsSingleton.AddGauge("uptime", func() float64 {
+		admin.stats.AddGauge("uptime", func() float64 {
 			return float64(time.Now().Unix() - StartUpTime)
 		})
+		// TODO: other basic stats, such as branch name. How to do that with go's build system?
 	}
-	return statsSingleton
+	return admin
 }
 
-func StartToLive() error {
+/*
+ * Main entry function of gostrich
+ */
+func StartToLive(register func(*http.ServeMux)) error {
 	ncpu := *NumCPU
 
 	log.Printf("Admin staring to live, with admin port of %v and debug port of %v with %v CPUs", *AdminPort+*PortOffset, *DebugPort+*PortOffset, ncpu)
@@ -598,14 +628,14 @@ func StartToLive() error {
 		log.Println(http.ListenAndServe(":"+strconv.Itoa(*DebugPort+*PortOffset), nil))
 	}()
 	//making sure stats are created.
-	StatsSingleton()
-	statsSingleton.shutdownHook = func() {
+	AdminServer()
+	admin.shutdownHook = func() {
 		if *CpuProfile != "" {
 			pprof.StopCPUProfile()
 		}
 		log.Printf("Shutdown gostrich.")
 	}
-	return statsSingleton.StartToLive(*AdminPort+*PortOffset, *JsonLineBreak)
+	return admin.StartToLive(*AdminPort+*PortOffset, *JsonLineBreak, register)
 }
 
 func UpdatePort(address string, offset int) string {

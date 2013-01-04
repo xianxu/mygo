@@ -39,7 +39,7 @@ func init() {
 							CacheResponseBody:   true,
 							MaxIdleConnsPerHost: 20,
 						}),
-					Reporter: tfe.NewHttpStatsReporter(gostrich.StatsSingleton().Scoped("tfe-tbapi-smf1-plaintext")),
+					Reporter: tfe.NewHttpStatsReporter(gostrich.AdminServer().GetStats().Scoped("tfe-tbapi-smf1-plaintext")),
 				},
 			},
 		}

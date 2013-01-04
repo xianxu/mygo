@@ -37,7 +37,7 @@ func init() {
 							Retries:   1,
 							ProberReq: rpcx.ProberReqLastFail,
 						}),
-					Reporter: tfe.NewHttpStatsReporter(gostrich.StatsSingleton().Scoped("tweetbutton-tunneled")),
+					Reporter: tfe.NewHttpStatsReporter(gostrich.AdminServer().GetStats().Scoped("tweetbutton-tunneled")),
 				},
 			},
 		}

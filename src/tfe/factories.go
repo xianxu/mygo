@@ -29,7 +29,7 @@ func CreateStaticHttpCluster(config StaticHttpCluster) *rpcx.Cluster {
 		services[i] = rpcx.NewSupervisor(
 			h,
 			withTimeout,
-			NewHttpStatsReporter(gostrich.StatsSingleton().Scoped(config.Name).Scoped(h)),
+			NewHttpStatsReporter(gostrich.AdminServer().GetStats().Scoped(config.Name).Scoped(h)),
 			config.ProberReq,
 			nil, // no need to recreate client since http.Transport does those alrady
 		)
@@ -38,7 +38,7 @@ func CreateStaticHttpCluster(config StaticHttpCluster) *rpcx.Cluster {
 		Name:     config.Name,
 		Services: services,
 		Retries:  config.Retries,
-		Reporter: NewHttpStatsReporter(gostrich.StatsSingleton().Scoped(config.Name)),
+		Reporter: NewHttpStatsReporter(gostrich.AdminServer().GetStats().Scoped(config.Name)),
 	}
 
 }

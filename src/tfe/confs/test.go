@@ -26,7 +26,7 @@ func init() {
 							Retries:   1,
 							ProberReq: rpcx.ProberReqLastFail,
 						}),
-					Reporter: tfe.NewHttpStatsReporter(gostrich.StatsSingleton().Scoped("tfe-tco")),
+					Reporter: tfe.NewHttpStatsReporter(gostrich.AdminServer().GetStats().Scoped("tfe-tco")),
 				},
 				&tfe.PrefixRewriteRule{
 					Name:              "tweetbutton",
@@ -45,7 +45,7 @@ func init() {
 							Retries:   1,
 							ProberReq: rpcx.ProberReqLastFail,
 						}),
-					Reporter: tfe.NewHttpStatsReporter(gostrich.StatsSingleton().Scoped("tfe-tbapi")),
+					Reporter: tfe.NewHttpStatsReporter(gostrich.AdminServer().GetStats().Scoped("tfe-tbapi")),
 				},
 				&tfe.PrefixRewriteRule{
 					Name:              "dead",
