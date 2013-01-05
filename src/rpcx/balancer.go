@@ -195,8 +195,7 @@ func NewReplaceable(
 }
 
 func MicroTilNow(then time.Time) int64 {
-	now := time.Now()
-	return int64((now.Second()-then.Second())*1000000 + (now.Nanosecond()-then.Nanosecond())/1000)
+	return time.Now().Sub(then).Nanoseconds()/1000
 }
 
 func (s *Supervisor) isDead() bool {
@@ -229,7 +228,7 @@ func (s *Supervisor) Serve(req interface{}, rsp interface{}) (err error) {
 		s.reporter.Report(req, rsp, err, latency)
 	}
 
-	log.Printf("Latency context is %v", s.latencyContext())
+	//log.Printf("Latency context is %v", s.latencyContext())
 	if err != nil {
 		if !s.latencies.IsFull() {
 			latency = maxErrorMicros
@@ -244,11 +243,12 @@ func (s *Supervisor) Serve(req interface{}, rsp interface{}) (err error) {
 	//      is received. this way we can roughly keep track of qps. then we just need to sample
 	//      based on that qps.
 	s.latencies.Observe(latency)
-	avg := average(s.latencies.Sampled())
+	sampled := s.latencies.Sampled()
+	avg := average(sampled)
 
 	// set average for faster access later on.
 	atomic.StoreInt64(&(s.latencyAvg), int64(avg))
-	log.Printf("current avg latency is %v", avg)
+	//log.Printf("current %v avg %v, %v", latency, avg, sampled)
 	s.svcLock.RUnlock()
 	// End of lock
 
