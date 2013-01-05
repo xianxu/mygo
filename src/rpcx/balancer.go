@@ -338,7 +338,7 @@ type Cluster struct {
 }
 
 // this is only called if there's at least one downstream service register. so this must succeed
-func (c *Cluster) latencyAvg()float64 {
+func (c *Cluster) LatencyAvg()float64 {
 	c.Lock.RLock()
 	defer c.Lock.RUnlock()
 
@@ -352,10 +352,10 @@ func (c *Cluster) latencyAvg()float64 {
 // this is only called if there's at least one downstream service register. so this must succeed
 func (c *Cluster) pickAService()*Supervisor {
 	prob := 0.0
-	latencyC := c.latencyAvg()
+	latencyC := c.LatencyAvg()
 	var s *Supervisor
 	for retries := 0; rand.Float64() >= prob && retries < maxSelectorRetry; retries += 1 {
-		s := c.Services[rand.Int()%len(c.Services)]
+		s = c.Services[rand.Int()%len(c.Services)]
 		//TODO:
 		//  - tweak formula
 		//  - should we not call dead service at all? current it's still called with certain prob.
@@ -516,7 +516,7 @@ func NewReliableService(conf ReliableService) Service {
 				fmt.Sprintf("%v:conn:%v", conf.Name, j),
 				svc,
 				func()float64 {
-					return cluster.latencyAvg()
+					return cluster.LatencyAvg()
 				},
 				nil,
 				maker)
@@ -528,7 +528,7 @@ func NewReliableService(conf ReliableService) Service {
 			sname,
 			cluster,
 			func()float64 {
-				return top.latencyAvg()
+				return top.LatencyAvg()
 			},
 			reporter,
 			conf.Prober,
@@ -553,6 +553,3 @@ func average(ns []int64) float64 {
 	}
 	return float64(sum) / float64(len(ns))
 }
-
-
-
