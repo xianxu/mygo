@@ -29,8 +29,8 @@ import (
 
 var (
 	//TODO: better reporting.
-	Timeout              = Error("rpcx.timeout")
-	NilUnderlyingService = Error("underlying service is nil")
+	TimeoutErr              = Error("rpcx.timeout")
+	NilUnderlyingServiceErr = Error("underlying service is nil")
 
 	// Setting ProberReq to this value, the prober will use last request that triggers a service
 	// being marked dead as the prober req. This works fine for idempotent requests. Otherwise
@@ -39,14 +39,19 @@ var (
 )
 
 const (
-	proberFreqSec   int32 = 5
-	replacerFreqSec int32 = 30
-	maxSelectorRetry  int = 20
-	flakyThreshold  float64 = 2
-	deadThreshold   float64 = 2
+	proberFreqSec    int32 = 5
+	replacerFreqSec  int32 = 30
+	maxSelectorRetry   int = 20
+	flakyThreshold float64 = 2
+	deadThreshold  float64 = 2
 )
 
 type Error string
+
+type Timeout interface {
+	// provides the ms value that a service call should be timed out. 0 stands for not timing out.
+	GetTimeout()time.Duration
+}
 
 func (t Error) Error() string {
 	return string(t)
@@ -54,10 +59,10 @@ func (t Error) Error() string {
 
 /*
  * An abstract service that transforms req to rep. Typically a service is a rpc, but not
- * necessarily so. We also bake in a timeout value, making interface less pure but more practical.
+ * necessarily so.
  */
 type Service interface {
-	Serve(req interface{}, rsp interface{}, timeout time.Duration) error
+	Serve(req interface{}, rsp interface{}) error
 }
 
 /*
@@ -196,13 +201,13 @@ func (s *Supervisor) isDead() bool {
  * Serve request. The basic logic's to call underlying service, keep track of latency and optionally
  * trigger prober/replacer.
  */
-func (s *Supervisor) Serve(req interface{}, rsp interface{}, timeout time.Duration) (err error) {
+func (s *Supervisor) Serve(req interface{}, rsp interface{}) (err error) {
 	then := time.Now()
 	s.svcLock.RLock()
 	if s.service == nil {
-		err = NilUnderlyingService
+		err = NilUnderlyingServiceErr
 	} else {
-		err = s.service.Serve(req, rsp, timeout)
+		err = s.service.Serve(req, rsp)
 	}
 
 	// micro seconds
@@ -283,9 +288,9 @@ func (s *Supervisor) Serve(req interface{}, rsp interface{}, timeout time.Durati
 
 						switch s.proberReq.(type) {
 						case ProberReqLastFailType:
-							s.Serve(req, rsp, timeout)
+							s.Serve(req, rsp)
 						default:
-							s.Serve(s.proberReq, rsp, timeout)
+							s.Serve(s.proberReq, rsp)
 						}
 					}
 				}()
@@ -295,33 +300,38 @@ func (s *Supervisor) Serve(req interface{}, rsp interface{}, timeout time.Durati
 	return
 }
 
-// Wrapper of a service that times out. Typically it's more efficiently to rely on underlying
-// service's timeout mechanism.
+// Wrapper of a service that honors timeout. Typically timeouts can be more efficiently coded by
+// concrete service implementations. This is here for cases where underlying service doesn't
+// provide timeout mechanism.
 type ServiceWithTimeout struct {
 	Service Service
 	Timeout time.Duration
 }
 
-func (s *ServiceWithTimeout) Serve(req interface{}, rsp interface{}, timeout time.Duration) (err error) {
-	if s.Timeout > 0 {
-		tick := time.After(s.Timeout)
+func (s *ServiceWithTimeout) Serve(req interface{}, rsp interface{}) (err error) {
+	timeout := 0*time.Second
+	if to, ok := req.(Timeout); ok {
+		timeout = to.GetTimeout()
+	}
+	if timeout > 0 {
+		tick := time.After(timeout)
 		// need at least 1 capacity so that when a rpc call return after timeout has occurred,
 		// it doesn't block the goroutine sending such notification.
 		// not sure why rpc package uses capacity 10 though.
 		done := make(chan error, 1)
 
 		go func() {
-			err = s.Service.Serve(req, rsp, timeout)
+			err = s.Service.Serve(req, rsp)
 			done <- err
 		}()
 
 		select {
 		case <-done:
 		case <-tick:
-			err = Timeout
+			err = TimeoutErr
 		}
 	} else {
-		err = s.Service.Serve(req, rsp, timeout)
+		err = s.Service.Serve(req, rsp)
 	}
 	return
 }
@@ -375,7 +385,7 @@ func (c *Cluster) pickAService()*Supervisor {
 	return s
 }
 
-func (c *Cluster) serveOnce(req interface{}, rsp interface{}, timeout time.Duration) (err error) {
+func (c *Cluster) serveOnce(req interface{}, rsp interface{}) (err error) {
 	c.Lock.RLock()
 	defer c.Lock.RUnlock()
 
@@ -390,7 +400,7 @@ func (c *Cluster) serveOnce(req interface{}, rsp interface{}, timeout time.Durat
 	s := c.pickAService()
 
 	// serve
-	err = s.Serve(req, rsp, timeout)
+	err = s.Serve(req, rsp)
 
 	if c.Reporter != nil {
 		latency := MicroTilNow(then)
@@ -400,9 +410,9 @@ func (c *Cluster) serveOnce(req interface{}, rsp interface{}, timeout time.Durat
 	return
 }
 
-func (c *Cluster) Serve(req interface{}, rsp interface{}, timeout time.Duration) (err error) {
+func (c *Cluster) Serve(req interface{}, rsp interface{}) (err error) {
 	for i := 0; i <= c.Retries; i += 1 {
-		err = c.serveOnce(req, rsp, timeout)
+		err = c.serveOnce(req, rsp)
 		if err == nil {
 			return
 		} else {
@@ -453,7 +463,7 @@ type RpcCaller interface {
 type RpcGoer interface {
 	Go(method string, request interface{}, response interface{}, done chan *rpc.Call) *rpc.Call
 }
-type RPCClient interface {
+type RpcClient interface {
 	RpcCaller
 	RpcGoer
 }

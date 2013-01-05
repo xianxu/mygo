@@ -45,25 +45,33 @@ func (k Keyspace) Make() (name string, service rpcx.Service, err error) {
 }
 
 type KeyspaceService struct {
-	Client rpcx.RpcGoer
+	Client rpcx.RpcClient
 }
 
 // KeyspaceService is a Service
-func (ks KeyspaceService) Serve(req interface{}, rsp interface{}, timeout time.Duration) (err error) {
+func (ks KeyspaceService) Serve(req interface{}, rsp interface{}) (err error) {
+	timeout := 0*time.Second
+	if to, ok := req.(rpcx.Timeout); ok {
+		timeout = to.GetTimeout()
+	}
 	client := ks.Client
 	var rpcReq *rpcx.RpcReq
 	var ok bool
 	if rpcReq, ok = req.(*rpcx.RpcReq); !ok {
 		panic("wrong type passed")
 	}
-	tick := time.After(timeout)
+	if timeout > 0 {
+		tick := time.After(timeout)
 
-	call := client.Go(rpcReq.Fn, rpcReq.Args, rsp, make(chan *rpc.Call, 1))
-	select {
-	case c := <-call.Done:
-		err = c.Error
-	case <-tick:
-		err = rpcx.Timeout
+		call := client.Go(rpcReq.Fn, rpcReq.Args, rsp, make(chan *rpc.Call, 1))
+		select {
+		case c := <-call.Done:
+			err = c.Error
+		case <-tick:
+			err = rpcx.TimeoutErr
+		}
+	} else {
+		err = client.Call(rpcReq.Fn, rpcReq.Args, rsp)
 	}
 	return
 }
