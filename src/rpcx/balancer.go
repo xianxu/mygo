@@ -39,11 +39,35 @@ var (
 )
 
 const (
-	proberFreqSec    int32 = 5
-	replacerFreqSec  int32 = 30
-	maxSelectorRetry   int = 20
-	flakyThreshold float64 = 2
-	deadThreshold  float64 = 2
+	proberFreqSec       int32 = 5
+	replacerFreqSec     int32 = 30
+	maxSelectorRetry      int = 20
+
+	// Note, the following can be tweaked for fault tolerant behavior. They can be made as per
+	// service configuration. However, I feel a good choice of values can provide sufficient values,
+	// and freeing clients to figure out good values of those arcane numbers.
+	flakyThreshold    float64 = 2   // factor over normal to be considered flaky
+	deadThreshold     float64 = 4   // factor over normal to be considered dead
+	errorFactor       float64 = 30  // treat errors as X times of normal latency
+	latencyBuffer     float64 = 1.5 // factor of how bad latency compared to context before react
+	maxErrorMicros    int64 = 60000000
+
+	//TODO: hmm, how much to keep track? no good value without knowing qps. seems too complex to
+	//      keep track of actual qps to worth it. Let's just have a reasonable value? Say targeting
+	//      10K qps and range of 10 second. Meaning 100K values. If we sample at 1 per 1K, need to
+	//      keep track of 100. When traffic's low, the synptom's the load balancer will be slow
+	//      to react to error conditions.
+	//
+	//      The problem of keeping track of last 100? A short lived network glitch would trigger
+	//      state changes. Now, consider the following cases:
+	//
+	//        - network glitch on a host, while others are fine. This means service to that host
+	//          will timeout, and thus get disabled and later replaced, which while not ideal, is
+	//          fine.
+	//        - network glitch affecting all hosts. Latencies on all hosts would go up, and since
+	//          the latencyContext() goes up, individual hosts will not be marked dead, we should
+	//          be fine.
+	supervisorHistorySize int = 100 // size of history to keep
 )
 
 type Error string
@@ -136,7 +160,7 @@ func NewSupervisor(
 		sync.RWMutex{},
 		service,
 		name,
-		gostrich.NewIntSampler(100),
+		gostrich.NewIntSampler(supervisorHistorySize),
 		0, //TODO: good default?
 		latencyContext,
 		0,
@@ -175,26 +199,13 @@ func MicroTilNow(then time.Time) int64 {
 	return int64((now.Second()-then.Second())*1000000 + (now.Nanosecond()-then.Nanosecond())/1000)
 }
 
-// Two functions to determine if underlying service's bad. We have cold start logic (e.g. service's
-// always good until at least 100 calls are made. A service is also considered good when there's
-// no latencyContext defined (e.g. if there's nothing to compare, no matter how long latency is,
-// you can't call it bad).
-func (s *Supervisor) isFlaky() bool {
-	if !s.latencies.IsFull() || s.latencyContext == nil {
-		return false
-	}
-	avg := atomic.LoadInt64(&(s.latencyAvg))
-	overallAvg :=  s.latencyContext()
-	return flakyThreshold*float64(avg) >= overallAvg
-}
-
 func (s *Supervisor) isDead() bool {
 	if !s.latencies.IsFull() || s.latencyContext == nil {
 		return false
 	}
 	avg := atomic.LoadInt64(&(s.latencyAvg))
 	overallAvg :=  s.latencyContext()
-	return deadThreshold*float64(avg) >= overallAvg
+	return float64(avg) >= deadThreshold*overallAvg
 }
 
 /*
@@ -218,18 +229,26 @@ func (s *Supervisor) Serve(req interface{}, rsp interface{}) (err error) {
 		s.reporter.Report(req, rsp, err, latency)
 	}
 
-	// adjust latency on failure to be 10 sec
-	// TODO: hacky, should be configurable.
+	log.Printf("Latency context is %v", s.latencyContext())
 	if err != nil {
-		latency = 10 * 1000000
+		if !s.latencies.IsFull() {
+			latency = maxErrorMicros
+		} else {
+			latency = int64(math.Min(s.latencyContext() * errorFactor, float64(maxErrorMicros)))
+		}
 	}
 
-	// only need to keep track of history if service's not nil
+	//TODO: observe selectively, we only keep track of 10 request latencies. Ideally it should be
+	//      spread over 1 sec interval. one way to do it is to have some chan sending signaling
+	//      every 1 second. each supervisor keeps track of call counts, it's cleared when tick
+	//      is received. this way we can roughly keep track of qps. then we just need to sample
+	//      based on that qps.
 	s.latencies.Observe(latency)
 	avg := average(s.latencies.Sampled())
 
 	// set average for faster access later on.
 	atomic.StoreInt64(&(s.latencyAvg), int64(avg))
+	log.Printf("current avg latency is %v", avg)
 	s.svcLock.RUnlock()
 	// End of lock
 
@@ -355,6 +374,7 @@ type Cluster struct {
 }
 
 // this is only called if there's at least one downstream service register. so this must succeed
+// TODO: tricky part though is the case of cold start
 func (c *Cluster) LatencyAvg()float64 {
 	c.Lock.RLock()
 	defer c.Lock.RUnlock()
@@ -380,7 +400,7 @@ func (c *Cluster) pickAService()*Supervisor {
 			// if all services are dead, we will choose the last one, this is by design
 			continue
 		}
-	    prob = math.Min(1, (latencyC * 1.5) / float64(s.latencyAvg))
+	    prob = math.Min(1, (latencyC * latencyBuffer) / float64(s.latencyAvg))
 	}
 	return s
 }
