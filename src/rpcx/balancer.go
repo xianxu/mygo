@@ -9,17 +9,21 @@ import (
 	"log"
 	"fmt"
 	"net/rpc"
+	"math/rand"
+	"math"
 )
 
 // TODO: 
-//   - Traffic to FLAKY service might be too low
 //   - Closer of a service
 //   - Service discovery
 //
-// Generic load balancer logic, provides:
-//   - Probing when dead (Supervisor)
-//   - Recreate service when dead (Replaceable, Supervisor)
-//   - Load balancing among multiple hosts
+// Generic load balancer logic in a distributed system. It provides:
+//   - Load balancing among multiple hosts/connections evenly (number of qps).
+//   - Aware of difference in machine power. Query fast machines more. 
+//   - Probing when a service's dead (Supervisor).
+//   - Recreate service when dead for a whlie (Replaceable, Supervisor)
+//
+// And later on for distributed tracking etc. client ids etc.
 //
 
 var (
@@ -28,8 +32,17 @@ var (
 	NilUnderlyingService = Error("underlying service is nil")
 
 	// Setting ProberReq to this value, the prober will use last request that triggers a service
-	// being marked dead as the prober req.
+	// being marked dead as the prober req. This works fine for idempotent requests. Otherwise
+	// doesn't work and prober req would be in other form.
 	ProberReqLastFail ProberReqLastFailType
+)
+
+const (
+	proberFreqSec   int32 = 5
+	replacerFreqSec int32 = 30
+	maxSelectorRetry  int = 20
+	flakyThreshold  float64 = 2
+	deadThreshold   float64 = 2
 )
 
 type Error string
@@ -38,70 +51,52 @@ func (t Error) Error() string {
 	return string(t)
 }
 
+/*
+ * An abstract service that transforms req to rep. Typically a service is a rpc, but not
+ * necessarily so. We also bake in a timeout value, making interface less pure but more practical.
+ */
 type Service interface {
-	// a Service, conforming to Go's rpc.Client.
-	/*Go(fn string, args interface{}, reply interface{}, done chan *rpc.Call) *Call*/
-	/*Call(fn string, args interface{}, reply interface{}) error*/
-
-	// TODO: Should we put a timeout into the interface itself? That would allow at minimal
-	//       one less chan creation. Consider the case for rpc, where it already provides
-	//       a chan to block on. Without pushing timeout logic down, we'll need to create
-	//       another goroutine and channel, just to do timeout.
-	//
-	// In all seriousness, why would anyone need a service without timeout? Thus include it
-	// for now.
-	//
-	// timeout = 0 means no timeout requested. if a service does not support timeout, it
-	// is required caller set timeout to 0, to expressly acknowledge they aren't expecting
-	// timeout.
 	Serve(req interface{}, rsp interface{}, timeout time.Duration) error
 
 	// TODO: do we want a Closer? seems so.
 }
 
+/*
+ * Maker of a service, this is used to recreate a service in case of persisted errors. Maker would
+ * typically contain state such as which host to connect to etc.
+ */
 type ServiceMaker interface {
 	Make() (name string, s Service, e error)
 }
 
-/*
- * Status of a service. We will query bad servers less frequently.
- */
-type ServiceStatus int32
-
-const (
-	SERVICE_ALIVE = ServiceStatus(0) // Node will be queried normally
-	SERVICE_FLAKY = ServiceStatus(1) // Node seems flaky, we will send lower traffic
-
-	// When node seems dead, we dice throw upto 100 times to avoid picking a dead node. Given
-	// 10 server cluster and 9 dead, the probability of not picking one dead is > 99.99% after
-	// 100 dice. It'll be better in real situation.
-	SERVICE_DEAD = ServiceStatus(100)
-)
-
-func average(ns []int64) float64 {
-	sum := 0.0
-	for i := range ns {
-		sum += float64(atomic.LoadInt64(&ns[i]))
-	}
-	return float64(sum) / float64(len(ns))
-}
-
+// general interface used to do basic reporting of service status. the parameters in order are:
+// req, rep, error and latency
 type ServiceReporter interface {
 	Report(interface{}, interface{}, error, int64)
 }
 
+// whether to use last req that errors out as probing req.
 type ProberReqLastFailType int
 
 // Wrapping on top of a Service, keeping track service history for load balancing purpose.
 // There are two strategy dealing with faulty services, either we can keep probing it, or
 // we can create a new service to replace the faulty one.
+// TODO: Supervisor a bad name, easy to confuse with Erlang's, which serve different purpose.
 type Supervisor struct {
-	svcLock   sync.RWMutex
-	service   Service             // underlying service.
-	name      string              // Human readable name
-	latencies gostrich.IntSampler // Keeps track of host latency, in micro seconds
+	svcLock         sync.RWMutex
+	service         Service             // underlying service.
+	name            string              // Human readable name
 
-	status          ServiceStatus // Mutable field of service status
+	// latency stats
+	latencies       gostrich.IntSampler // Keeps track of host latency, in micro seconds
+	latencyAvg      int64               // Average latency
+	latencyContext  func()float64       // A function that returns what's the average latency across
+	                                    // some computation context, such as within a cluster that
+										// this supervisor belongs to.
+										// Supervisor would react when it's own latency's 2x, 4x of
+										// the preceived healthy average.
+
+	// Note the following two fields are int32 so that we can compare/set atomically
 	proberRunning   int32         // Mutable field of whether there's a prober running
 	replacerRunning int32         // Mutable field of whether we are replacing service
 
@@ -109,8 +104,11 @@ type Supervisor struct {
 	//   - To start a prober to probe
 	//   - To replace faulty service with a new service.
 	//
-	// To use prober, set proberReq to anything that's not a ProberReqLastFailType.
-	// To replace faulty service, supply a Service Maker.
+	// To use prober, set proberReq to non-null. If it's anything that's a ProberReqLastFailType,
+	// last req's used as probe req, otherwise proberReq is assumed to be the object to use.
+	//
+	// To replace faulty service, supply a ServiceMaker.
+	// Specifying nil disable corresponding functionalities.
 	//
 	// If a serviceMaker is specified, we will replace dead service with one freshly created.
 	// This new service keeps old service state. When proberReq is not nil, probing will be
@@ -119,56 +117,52 @@ type Supervisor struct {
 	serviceMaker ServiceMaker
 
 	reporter ServiceReporter // where to report service status, gostrich thing
-
-	// the following are specific limit of what's considered flaky/dead for the service
-	flaky float64 // What's average latency to be considered flaky in micro
-	dead  float64 // What's average latency to be considered dead in micro
-
-	// frequency to run prober and replacer when service gone dead.
-	proberFreqSec   byte
-	replacerFreqSec byte
 }
 
 // A Balancer is supervisor that tracks last 100 service call status. It recovers mostly by keep
-// probing. In rare situation, ServiceMaker may be invoked to recreate all underlying services,
-// but that sounds "dangerous" and "expensive".
-func NewSupervisor(name string, service Service, reporter ServiceReporter, proberReq interface{}, serviceMaker ServiceMaker) *Supervisor {
+// probing. In other cases, ServiceMaker may be invoked to recreate all underlying services.
+func NewSupervisor(
+	name string,
+	service Service,
+	latencyContext func()float64,
+	reporter ServiceReporter,
+	proberReq interface{},
+	serviceMaker ServiceMaker) *Supervisor {
 	return &Supervisor{
 		sync.RWMutex{},
 		service,
 		name,
 		gostrich.NewIntSampler(100),
-		SERVICE_ALIVE,
+		0, //TODO: good default?
+		latencyContext,
 		0,
 		0,
 		proberReq,
 		serviceMaker,
 		reporter,
-		1000 * 1000,
-		9500 * 1000,
-		3,
-		60,
 	}
 }
 
 // A replaceable service that recovers from error by replacing underlying service with a new one
 // from service maker.
-func NewReplaceable(name string, service Service, reporter ServiceReporter, serviceMaker ServiceMaker) *Supervisor {
+func NewReplaceable(
+	name string,
+	service Service,
+	latencyContext func()float64,
+	reporter ServiceReporter,
+	serviceMaker ServiceMaker) *Supervisor {
 	return &Supervisor{
 		sync.RWMutex{},
 		service,
 		name,
 		gostrich.NewIntSampler(2),
-		SERVICE_ALIVE,
+		0,
+		latencyContext,
 		0,
 		0,
 		nil,
 		serviceMaker,
 		reporter,
-		4000 * 1000, // one failure reduces chance of this channel being used.
-		9000 * 1000, // two failure result it being replaced.
-		3,           // not used
-		3,           // at replacer level, we try to re-establish service every 3 seconds
 	}
 }
 
@@ -177,6 +171,32 @@ func MicroTilNow(then time.Time) int64 {
 	return int64((now.Second()-then.Second())*1000000 + (now.Nanosecond()-then.Nanosecond())/1000)
 }
 
+// Two functions to determine if underlying service's bad. We have cold start logic (e.g. service's
+// always good until at least 100 calls are made. A service is also considered good when there's
+// no latencyContext defined (e.g. if there's nothing to compare, no matter how long latency is,
+// you can't call it bad).
+func (s *Supervisor) isFlaky() bool {
+	if !s.latencies.IsFull() || s.latencyContext == nil {
+		return false
+	}
+	avg := atomic.LoadInt64(&(s.latencyAvg))
+	overallAvg :=  s.latencyContext()
+	return flakyThreshold*float64(avg) >= overallAvg
+}
+
+func (s *Supervisor) isDead() bool {
+	if !s.latencies.IsFull() || s.latencyContext == nil {
+		return false
+	}
+	avg := atomic.LoadInt64(&(s.latencyAvg))
+	overallAvg :=  s.latencyContext()
+	return deadThreshold*float64(avg) >= overallAvg
+}
+
+/*
+ * Serve request. The basic logic's to call underlying service, keep track of latency and optionally
+ * trigger prober/replacer.
+ */
 func (s *Supervisor) Serve(req interface{}, rsp interface{}, timeout time.Duration) (err error) {
 	then := time.Now()
 	s.svcLock.RLock()
@@ -195,86 +215,79 @@ func (s *Supervisor) Serve(req interface{}, rsp interface{}, timeout time.Durati
 	}
 
 	// adjust latency on failure to be 10 sec
+	// TODO: hacky, should be configurable.
 	if err != nil {
 		latency = 10 * 1000000
 	}
 
-	var avg float64
-	if s.service != nil {
-		// only need to keep track of history if service's not nil
-		s.latencies.Observe(latency)
-		avg = average(s.latencies.Sampled())
-	} else {
-		// otherwise treat as dead
-		avg = s.dead
-	}
-	s.svcLock.RUnlock()
+	// only need to keep track of history if service's not nil
+	s.latencies.Observe(latency)
+	avg := average(s.latencies.Sampled())
 
-	// change service state
+	// set average for faster access later on.
+	atomic.StoreInt64(&(s.latencyAvg), int64(avg))
+	s.svcLock.RUnlock()
+	// End of lock
+
+	// react to faulty services.
 	switch {
-	case avg >= s.dead:
-		atomic.StoreInt32((*int32)(&s.status), int32(SERVICE_DEAD))
+	case s.isDead():
 		// Reactions to service being dead:
 		// If we have serviceMaker, try make a new service out of it.
 		if s.serviceMaker != nil {
 			if atomic.CompareAndSwapInt32((*int32)(&s.replacerRunning), 0, 1) {
-				// TODO: do we want to set underlying service to nil? If we decide it's a good
-				// time to replace underlying service, we pretty much have decided the error's
-				// not recoverable? Setting it to nil would allow failing fast for all subsequent
-				// calls to this service, until we recover.
+				// setting service to nil prevents service being used till new serivce is created.
 				s.svcLock.Lock()
 				s.service = nil
 				s.svcLock.Unlock()
 				go func() {
-					log.Printf("Service \"%v\" gone bad, start replacer routine\n", s.name)
+					log.Printf("Service \"%v\" gone bad, start replacer routine. This will " +
+					           "try replacing underlying service at fixed interval, until " +
+							   "service become healthy.", s.name)
 					for {
 						_, newService, err := s.serviceMaker.(ServiceMaker).Make()
 						if err == nil {
-							log.Printf("replacer obtained new service for \"%v\"", s.name, err)
+							log.Printf("replacer obtained new service for \"%v\"", s.name)
 							s.svcLock.Lock()
 							s.service = newService
 							s.latencies.Clear()
-							atomic.StoreInt32((*int32)(&s.status), int32(SERVICE_ALIVE))
-							atomic.StoreInt32((*int32)(&s.replacerRunning), 0)
+							s.latencyAvg = 0
 							s.svcLock.Unlock()
-							log.Printf("replacer exited \"%v\"", s.name, err)
+							log.Printf("replacer of \"%v\" successfully switched on a new service. Now exiting.", s.name)
+							atomic.StoreInt32((*int32)(&s.replacerRunning), 0)
 							break
 						} else {
 							log.Printf("replacer errors out for \"%v\", will try later. %v", s.name, err)
 						}
-
-						time.Sleep(time.Duration(int64(s.replacerFreqSec)) * time.Second)
+						time.Sleep(time.Duration(int64(replacerFreqSec)) * time.Second)
 					}
 				}()
 			}
 		}
-		// if we have a prober, try probe it.
+		// if we have a prober, set to probe it, since traffic to this end point will be very limited.
 		if s.proberReq != nil {
 			if atomic.CompareAndSwapInt32((*int32)(&s.proberRunning), 0, 1) {
 				go func() {
 					log.Printf("Service \"%v\" gone bad, start probing\n", s.name)
 					for {
-						time.Sleep(time.Duration(int64(s.proberFreqSec)) * time.Second)
+						time.Sleep(time.Duration(int64(proberFreqSec)) * time.Second)
+						if !s.isDead() {
+							log.Printf("Service \"%v\" recovered, exit prober routine\n", s.name)
+							atomic.StoreInt32((*int32)(&s.proberRunning), 0)
+							break
+						}
 						log.Printf("Service %v is dead, probing..", s.name)
+
 						switch s.proberReq.(type) {
 						case ProberReqLastFailType:
 							s.Serve(req, rsp, timeout)
 						default:
 							s.Serve(s.proberReq, rsp, timeout)
 						}
-						if atomic.LoadInt32((*int32)(&s.status)) < int32(SERVICE_DEAD) {
-							log.Printf("Service \"%v\" recovered, exit prober routine\n", s.name)
-							atomic.StoreInt32((*int32)(&s.proberRunning), 0)
-							break
-						}
 					}
 				}()
 			}
 		}
-	case avg > s.flaky:
-		atomic.StoreInt32((*int32)(&s.status), int32(SERVICE_FLAKY))
-	default:
-		atomic.StoreInt32((*int32)(&s.status), int32(SERVICE_ALIVE))
 	}
 	return
 }
@@ -311,6 +324,7 @@ func (s *ServiceWithTimeout) Serve(req interface{}, rsp interface{}, timeout tim
  * services across multiple machines. At lower level, it can also be used to manage connection
  * pool to a single host.
  *
+ * TODO: don't query dead service?
  * TODO: the logic to grow and shrink the service pool is not implemented yet.
  */
 type Cluster struct {
@@ -321,6 +335,37 @@ type Cluster struct {
 
 	// internals, default values' fine
 	Lock sync.RWMutex // guard services
+}
+
+// this is only called if there's at least one downstream service register. so this must succeed
+func (c *Cluster) latencyAvg()float64 {
+	c.Lock.RLock()
+	defer c.Lock.RUnlock()
+
+	sum := 0.0
+	for _, s := range c.Services {
+		sum += float64(atomic.LoadInt64(&(s.latencyAvg)))
+	}
+	return sum / float64(len(c.Services))
+}
+
+// this is only called if there's at least one downstream service register. so this must succeed
+func (c *Cluster) pickAService()*Supervisor {
+	prob := 0.0
+	latencyC := c.latencyAvg()
+	var s *Supervisor
+	for retries := 0; rand.Float64() >= prob && retries < maxSelectorRetry; retries += 1 {
+		s := c.Services[rand.Int()%len(c.Services)]
+		//TODO:
+		//  - tweak formula
+		//  - should we not call dead service at all? current it's still called with certain prob.
+		if s.isDead() {
+			// if all services are dead, we will choose the last one, this is by design
+			continue
+		}
+	    prob = math.Min(1, (latencyC * 1.5) / float64(s.latencyAvg))
+	}
+	return s
 }
 
 func (c *Cluster) serveOnce(req interface{}, rsp interface{}, timeout time.Duration) (err error) {
@@ -335,13 +380,9 @@ func (c *Cluster) serveOnce(req interface{}, rsp interface{}, timeout time.Durat
 	}
 
 	// pick one random
-	// ... Nanosecond() on linux only have precision of microsecond, thus use microsecond as dice
-	s := c.Services[(time.Now().Nanosecond()/1000)%len(c.Services)]
+	s := c.pickAService()
 
-	// adjust the pick by the healthiness of the node
-	for retries := 0; atomic.LoadInt32((*int32)(&s.status)) > int32(retries); retries += 1 {
-		s = c.Services[(time.Now().Nanosecond()/1000)%len(c.Services)]
-	}
+	// serve
 	err = s.Serve(req, rsp, timeout)
 
 	if c.Reporter != nil {
@@ -421,9 +462,17 @@ type RPCClient interface {
 //          \                       /  Replaceable - KeyspaceService  --\
 //            Supervisor - Cluster  -  Replaceable - KeyspaceService  ---->  Cassandra host 2
 //                                  \  Replaceable - KeyspaceService  --/
-//
+// Hmm, TODO:
+// Why don't simplify to the following? TODO: try this later after getting other portion set
+//             /  Replaceable - KeyspaceService  --\
+//            /-  Replaceable - KeyspaceService  ---->  Cassandra host 1
+//           /--  Replaceable - KeyspaceService  --/
+// Cluster -+
+//           \--  Replaceable - KeyspaceService  --\
+//            \-  Replaceable - KeyspaceService  ---->  Cassandra host 2
+//             \  Replaceable - KeyspaceService  --/
 
-// Create a reliable service out of a group of service makers. n services will be make from
+// Create a reliable service out of a group of service makers. n services will be created by
 // each ServiceMaker (think connections).
 type ReliableService struct {
 	Name        string
@@ -435,12 +484,18 @@ type ReliableService struct {
 }
 
 func NewReliableService(conf ReliableService) Service {
-	supers := make([]*Supervisor, len(conf.Makers))
-
 	var sname string
 	var svc Service
 	var err error
 	var reporter ServiceReporter
+
+	supers := make([]*Supervisor, len(conf.Makers))
+	top := &Cluster{
+		Name:     conf.Name,
+		Services: supers,
+		Retries:  conf.Retries,
+		Reporter: reporter,
+	}
 
 	for i, maker := range conf.Makers {
 
@@ -451,27 +506,53 @@ func NewReliableService(conf ReliableService) Service {
 			concur = conf.Concurrency
 		}
 		services := make([]*Supervisor, concur)
+		cluster := &Cluster{Name: sname, Services: services}
 		for j := range services {
 			sname, svc, err = maker.Make()
 			if err != nil {
 				log.Printf("Failed to make a service: %v %v. Error is %v", conf.Name, sname, err)
 			}
-			services[j] = NewReplaceable(fmt.Sprintf("%v:conn:%v", conf.Name, j), svc, nil, maker)
+			services[j] = NewReplaceable(
+				fmt.Sprintf("%v:conn:%v", conf.Name, j),
+				svc,
+				func()float64 {
+					return cluster.latencyAvg()
+				},
+				nil,
+				maker)
 		}
-		cluster := &Cluster{Name: sname, Services: services}
 		if conf.Stats != nil {
 			reporter = NewBasicStatsReporter(conf.Stats.Scoped(sname))
 		}
-		supers[i] = NewSupervisor(sname, cluster, reporter, conf.Prober, nil)
+		supers[i] = NewSupervisor(
+			sname,
+			cluster,
+			func()float64 {
+				return top.latencyAvg()
+			},
+			reporter,
+			conf.Prober,
+			nil)
 	}
 
 	if conf.Stats != nil {
 		reporter = NewBasicStatsReporter(conf.Stats)
 	}
-	return &Cluster{
-		Name:     conf.Name,
-		Services: supers,
-		Retries:  conf.Retries,
-		Reporter: reporter,
-	}
+	return top
 }
+
+///////////////////////////////////////
+// Private utilities
+///////////////////////////////////////
+
+// thread safe way to calculate average.
+func average(ns []int64) float64 {
+	sum := 0.0
+	for i := range ns {
+		sum += float64(atomic.LoadInt64(&ns[i]))
+	}
+	return float64(sum) / float64(len(ns))
+}
+
+
+

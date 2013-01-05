@@ -83,6 +83,7 @@ type IntSampler interface {
 	Observe(f int64)
 	Sampled() []int64
 	Clear()
+	IsFull() bool
 }
 
 /*
@@ -103,7 +104,7 @@ type intSampler struct {
  * This is just a intSampler with preallocated buffer that gostrich use internally
  */
 type intSamplerWithClone struct {
-	intSampler
+	*intSampler
 	// cloned cache's used to do stats reporting, where we need to sort the content of cache.
 	clonedCache []int64
 }
@@ -177,7 +178,7 @@ func NewIntSampler(size int) *intSampler {
 
 func NewIntSamplerWithClone(size int) *intSamplerWithClone {
 	return &intSamplerWithClone{
-		intSampler{
+		&intSampler{
 			0,
 			0,
 			size,
@@ -210,6 +211,11 @@ func (s *intSampler) Clear() {
 	for i := range s.cache {
 		atomic.StoreInt64(&s.cache[i], 0)
 	}
+}
+
+func (s *intSampler) IsFull() bool {
+	n := atomic.LoadInt64(&(s.count))
+	return n >= int64(s.length)
 }
 
 /*
