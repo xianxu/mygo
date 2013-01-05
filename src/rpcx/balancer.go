@@ -11,11 +11,12 @@ import (
 	"net/rpc"
 	"math/rand"
 	"math"
+	"io"
 )
 
 // TODO: 
-//   - Closer of a service
 //   - Service discovery
+//   - Dynamic adjust of number of connections
 //
 // Generic load balancer logic in a distributed system. It provides:
 //   - Load balancing among multiple hosts/connections evenly (number of qps).
@@ -57,8 +58,6 @@ func (t Error) Error() string {
  */
 type Service interface {
 	Serve(req interface{}, rsp interface{}, timeout time.Duration) error
-
-	// TODO: do we want a Closer? seems so.
 }
 
 /*
@@ -238,6 +237,10 @@ func (s *Supervisor) Serve(req interface{}, rsp interface{}, timeout time.Durati
 			if atomic.CompareAndSwapInt32((*int32)(&s.replacerRunning), 0, 1) {
 				// setting service to nil prevents service being used till new serivce is created.
 				s.svcLock.Lock()
+				if closer, ok := Service(s).(io.Closer); ok {
+					err := closer.Close()
+					log.Printf("Error closing a service %v, the error is %v", s.name, err)
+				}
 				s.service = nil
 				s.svcLock.Unlock()
 				go func() {
@@ -300,21 +303,25 @@ type ServiceWithTimeout struct {
 }
 
 func (s *ServiceWithTimeout) Serve(req interface{}, rsp interface{}, timeout time.Duration) (err error) {
-	tick := time.After(s.Timeout)
-	// need at least 1 capacity so that when a rpc call return after timeout has occurred,
-	// it doesn't block the goroutine sending such notification.
-	// not sure why rpc package uses capacity 10 though.
-	done := make(chan error, 1)
+	if s.Timeout > 0 {
+		tick := time.After(s.Timeout)
+		// need at least 1 capacity so that when a rpc call return after timeout has occurred,
+		// it doesn't block the goroutine sending such notification.
+		// not sure why rpc package uses capacity 10 though.
+		done := make(chan error, 1)
 
-	go func() {
+		go func() {
+			err = s.Service.Serve(req, rsp, timeout)
+			done <- err
+		}()
+
+		select {
+		case <-done:
+		case <-tick:
+			err = Timeout
+		}
+	} else {
 		err = s.Service.Serve(req, rsp, timeout)
-		done <- err
-	}()
-
-	select {
-	case <-done:
-	case <-tick:
-		err = Timeout
 	}
 	return
 }
