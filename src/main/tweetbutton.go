@@ -129,7 +129,7 @@ func main() {
 		Name:        "tweetbutton",
 		Makers:      makeAll(*cassandras),
 		Concurrency: *concurrency,
-		Stats:       gostrich.StatsSingleton(),
+		Stats:       gostrich.AdminServer().GetStats(),
 	}
 	cas := rpcx.NewReliableService(rs)
 
@@ -148,5 +148,5 @@ func main() {
 		log.Fatal(server.ListenAndServe())
 	}()
 
-	gostrich.StartToLive()
+	gostrich.StartToLive(nil)
 }

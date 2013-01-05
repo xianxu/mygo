@@ -51,7 +51,7 @@ var (
  * An Admin provides a start up method and get root of stats collector.
  */
 type Admin interface {
-	StartToLive() error
+	StartToLive(registers []func(*http.ServeMux)) error
 	GetStats() Stats
 }
 
@@ -544,7 +544,7 @@ func (admin *adminServer) GetStats() Stats {
 /*
  * Blocks current goroutine. Call http /shutdown to shutdown.
  */
-func (admin *adminServer) StartToLive(adminPort int, jsonLineBreak bool, register func(*http.ServeMux)) error {
+func (admin *adminServer) StartToLive(adminPort int, jsonLineBreak bool, registers []func(*http.ServeMux)) error {
 	// only start a single copy
 	statsHttpImpl := &statsHttp{admin.stats, ":" + strconv.Itoa(adminPort)}
 	statsJson := &statsHttpJson{statsHttpImpl, jsonLineBreak}
@@ -562,8 +562,10 @@ func (admin *adminServer) StartToLive(adminPort int, jsonLineBreak bool, registe
 	})
 
 	// register other handlers
-	if register != nil {
-		register(mux)
+	if registers != nil {
+		for _, register := range registers {
+		  register(mux)
+	    }
 	}
 
 	server := http.Server{
@@ -610,7 +612,7 @@ func AdminServer() *adminServer {
 /*
  * Main entry function of gostrich
  */
-func StartToLive(register func(*http.ServeMux)) error {
+func StartToLive(registers []func(*http.ServeMux)) error {
 	ncpu := *NumCPU
 
 	log.Printf("Admin staring to live, with admin port of %v and debug port of %v with %v CPUs", *AdminPort+*PortOffset, *DebugPort+*PortOffset, ncpu)
@@ -641,7 +643,7 @@ func StartToLive(register func(*http.ServeMux)) error {
 		}
 		log.Printf("Shutdown gostrich.")
 	}
-	return admin.StartToLive(*AdminPort+*PortOffset, *JsonLineBreak, register)
+	return admin.StartToLive(*AdminPort+*PortOffset, *JsonLineBreak, registers)
 }
 
 func UpdatePort(address string, offset int) string {
