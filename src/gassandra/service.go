@@ -49,11 +49,7 @@ type KeyspaceService struct {
 }
 
 // KeyspaceService is a Service
-func (ks KeyspaceService) Serve(req interface{}, rsp interface{}) (err error) {
-	timeout := 0*time.Second
-	if to, ok := req.(rpcx.Timeout); ok {
-		timeout = to.GetTimeout()
-	}
+func (ks KeyspaceService) Serve(req interface{}, rsp interface{}, timeout time.Duration) (err error) {
 	client := ks.Client
 	var rpcReq *rpcx.RpcReq
 	var ok bool

@@ -17,6 +17,7 @@ import (
 // TODO: 
 //   - Service discovery
 //   - Dynamic adjust of number of connections
+//   - Shit :S, need to have timeout as a param, rather than as part of request, more flexible.
 //
 // Generic load balancer logic in a distributed system. It provides:
 //   - Load balancing among multiple hosts/connections evenly (number of qps).
@@ -86,7 +87,7 @@ func (t Error) Error() string {
  * necessarily so.
  */
 type Service interface {
-	Serve(req interface{}, rsp interface{}) error
+	Serve(req interface{}, rsp interface{}, timeout time.Duration) error
 }
 
 /*
@@ -211,13 +212,13 @@ func (s *Supervisor) isDead() bool {
  * Serve request. The basic logic's to call underlying service, keep track of latency and optionally
  * trigger prober/replacer.
  */
-func (s *Supervisor) Serve(req interface{}, rsp interface{}) (err error) {
+func (s *Supervisor) Serve(req interface{}, rsp interface{}, timeout time.Duration) (err error) {
 	then := time.Now()
 	s.svcLock.RLock()
 	if s.service == nil {
 		err = NilUnderlyingServiceErr
 	} else {
-		err = s.service.Serve(req, rsp)
+		err = s.service.Serve(req, rsp, timeout)
 	}
 
 	// micro seconds
@@ -307,9 +308,9 @@ func (s *Supervisor) Serve(req interface{}, rsp interface{}) (err error) {
 
 						switch s.proberReq.(type) {
 						case ProberReqLastFailType:
-							s.Serve(req, rsp)
+							s.Serve(req, rsp, timeout)
 						default:
-							s.Serve(s.proberReq, rsp)
+							s.Serve(s.proberReq, rsp, timeout)
 						}
 					}
 				}()
@@ -327,11 +328,7 @@ type ServiceWithTimeout struct {
 	Timeout time.Duration
 }
 
-func (s *ServiceWithTimeout) Serve(req interface{}, rsp interface{}) (err error) {
-	timeout := 0*time.Second
-	if to, ok := req.(Timeout); ok {
-		timeout = to.GetTimeout()
-	}
+func (s *ServiceWithTimeout) Serve(req interface{}, rsp interface{}, timeout time.Duration) (err error) {
 	if timeout > 0 {
 		tick := time.After(timeout)
 		// need at least 1 capacity so that when a rpc call return after timeout has occurred,
@@ -340,7 +337,7 @@ func (s *ServiceWithTimeout) Serve(req interface{}, rsp interface{}) (err error)
 		done := make(chan error, 1)
 
 		go func() {
-			err = s.Service.Serve(req, rsp)
+			err = s.Service.Serve(req, rsp, timeout)
 			done <- err
 		}()
 
@@ -350,7 +347,7 @@ func (s *ServiceWithTimeout) Serve(req interface{}, rsp interface{}) (err error)
 			err = TimeoutErr
 		}
 	} else {
-		err = s.Service.Serve(req, rsp)
+		err = s.Service.Serve(req, rsp, timeout)
 	}
 	return
 }
@@ -405,7 +402,7 @@ func (c *Cluster) pickAService()*Supervisor {
 	return s
 }
 
-func (c *Cluster) serveOnce(req interface{}, rsp interface{}) (err error) {
+func (c *Cluster) serveOnce(req interface{}, rsp interface{}, timeout time.Duration) (err error) {
 	c.Lock.RLock()
 	defer c.Lock.RUnlock()
 
@@ -420,7 +417,7 @@ func (c *Cluster) serveOnce(req interface{}, rsp interface{}) (err error) {
 	s := c.pickAService()
 
 	// serve
-	err = s.Serve(req, rsp)
+	err = s.Serve(req, rsp, timeout)
 
 	if c.Reporter != nil {
 		latency := MicroTilNow(then)
@@ -430,9 +427,9 @@ func (c *Cluster) serveOnce(req interface{}, rsp interface{}) (err error) {
 	return
 }
 
-func (c *Cluster) Serve(req interface{}, rsp interface{}) (err error) {
+func (c *Cluster) Serve(req interface{}, rsp interface{}, timeout time.Duration) (err error) {
 	for i := 0; i <= c.Retries; i += 1 {
-		err = c.serveOnce(req, rsp)
+		err = c.serveOnce(req, rsp, timeout)
 		if err == nil {
 			return
 		} else {

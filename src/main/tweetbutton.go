@@ -84,7 +84,7 @@ func (s *ServerState) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}}
 
 	var rsp gassandra.CassandraGetResponse
-	err = s.countService.Serve(&req, &rsp)
+	err = s.countService.Serve(&req, &rsp, s.timeout)
 
 	if err != nil {
 		w.WriteHeader(503)
