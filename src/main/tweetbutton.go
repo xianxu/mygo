@@ -125,13 +125,13 @@ func main() {
 	portOffset := *gostrich.PortOffset
 	newBinding := gostrich.UpdatePort(*binding, portOffset)
 
-	rs := rpcx.ReliableService{
+	conf := rpcx.ReliableServiceConf{
 		Name:        "tweetbutton",
 		Makers:      makeAll(*cassandras),
 		Concurrency: *concurrency,
 		Stats:       gostrich.AdminServer().GetStats(),
 	}
-	cas := rpcx.NewReliableService(rs)
+	cas := rpcx.NewReliableService(conf)
 
 	state := ServerState{cas, *cassandraTimeout}
 

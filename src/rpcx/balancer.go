@@ -496,34 +496,29 @@ type RpcClient interface {
 //          \                       /  Replaceable - KeyspaceService  --\
 //            Supervisor - Cluster  -  Replaceable - KeyspaceService  ---->  Cassandra host 2
 //                                  \  Replaceable - KeyspaceService  --/
-// Hmm, TODO:
-// Why don't simplify to the following? TODO: try this later after getting other portion set
-//             /  Replaceable - KeyspaceService  --\
-//            /-  Replaceable - KeyspaceService  ---->  Cassandra host 1
-//           /--  Replaceable - KeyspaceService  --/
-// Cluster -+
-//           \--  Replaceable - KeyspaceService  --\
-//            \-  Replaceable - KeyspaceService  ---->  Cassandra host 2
-//             \  Replaceable - KeyspaceService  --/
-
+//
 // Create a reliable service out of a group of service makers. n services will be created by
 // each ServiceMaker (think connections).
-type ReliableService struct {
-	Name        string
-	Makers      []ServiceMaker // ClientBuilder
-	Retries     int            // default to 0
-	Concurrency int            // default to 1
-	Prober      interface{}    // default to nil
-	Stats       gostrich.Stats // default to nil
+type ReliableServiceConf struct {
+	Name         string
+	Makers       []ServiceMaker // ClientBuilder
+	Retries      int            // default to 0
+	Concurrency  int            // default to 1
+	Prober       interface{}    // default to nil
+	Stats        gostrich.Stats // default to nil
+	PerHostStats bool          // whether to report per host stats
 }
 
-func NewReliableService(conf ReliableService) Service {
+func NewReliableService(conf ReliableServiceConf) Service {
 	var sname string
 	var svc Service
 	var err error
 	var reporter ServiceReporter
 
 	supers := make([]*Supervisor, len(conf.Makers))
+	if conf.Stats != nil {
+		reporter = NewBasicStatsReporter(conf.Stats)
+	}
 	top := &Cluster{
 		Name:     conf.Name,
 		Services: supers,
@@ -532,7 +527,6 @@ func NewReliableService(conf ReliableService) Service {
 	}
 
 	for i, maker := range conf.Makers {
-
 		var concur int
 		if conf.Concurrency == 0 {
 			concur = 1
@@ -555,8 +549,10 @@ func NewReliableService(conf ReliableService) Service {
 				nil,
 				maker)
 		}
-		if conf.Stats != nil {
+		if conf.Stats != nil && conf.PerHostStats {
 			reporter = NewBasicStatsReporter(conf.Stats.Scoped(sname))
+		} else {
+			reporter = nil
 		}
 		supers[i] = NewSupervisor(
 			sname,
@@ -567,10 +563,6 @@ func NewReliableService(conf ReliableService) Service {
 			reporter,
 			conf.Prober,
 			nil)
-	}
-
-	if conf.Stats != nil {
-		reporter = NewBasicStatsReporter(conf.Stats)
 	}
 	return top
 }
