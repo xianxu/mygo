@@ -3,15 +3,15 @@ package rpcx
 import (
 	"gostrich"
 
-	"time"
+	"fmt"
+	"io"
+	"log"
+	"math"
+	"math/rand"
+	"net/rpc"
 	"sync"
 	"sync/atomic"
-	"log"
-	"fmt"
-	"net/rpc"
-	"math/rand"
-	"math"
-	"io"
+	"time"
 )
 
 // TODO: 
@@ -40,18 +40,18 @@ var (
 )
 
 const (
-	proberFreqSec       int32 = 5
-	replacerFreqSec     int32 = 30
-	maxSelectorRetry      int = 20
+	proberFreqSec    int32 = 5
+	replacerFreqSec  int32 = 30
+	maxSelectorRetry int   = 20
 
 	// Note, the following can be tweaked for fault tolerant behavior. They can be made as per
 	// service configuration. However, I feel a good choice of values can provide sufficient values,
 	// and freeing clients to figure out good values of those arcane numbers.
-	flakyThreshold    float64 = 2   // factor over normal to be considered flaky
-	deadThreshold     float64 = 4   // factor over normal to be considered dead
-	errorFactor       float64 = 30  // treat errors as X times of normal latency
-	latencyBuffer     float64 = 1.5 // factor of how bad latency compared to context before react
-	maxErrorMicros    int64 = 60000000
+	flakyThreshold float64 = 2   // factor over normal to be considered flaky
+	deadThreshold  float64 = 4   // factor over normal to be considered dead
+	errorFactor    float64 = 30  // treat errors as X times of normal latency
+	latencyBuffer  float64 = 1.5 // factor of how bad latency compared to context before react
+	maxErrorMicros int64   = 60000000
 
 	//TODO: hmm, how much to keep track? no good value without knowing qps. seems too complex to
 	//      keep track of actual qps to worth it. Let's just have a reasonable value? Say targeting
@@ -75,7 +75,7 @@ type Error string
 
 type Timeout interface {
 	// provides the ms value that a service call should be timed out. 0 stands for not timing out.
-	GetTimeout()time.Duration
+	GetTimeout() time.Duration
 }
 
 func (t Error) Error() string {
@@ -112,22 +112,22 @@ type ProberReqLastFailType int
 // we can create a new service to replace the faulty one.
 // TODO: Supervisor a bad name, easy to confuse with Erlang's, which serve different purpose.
 type Supervisor struct {
-	svcLock         sync.RWMutex
-	service         Service             // underlying service.
-	name            string              // Human readable name
+	svcLock sync.RWMutex
+	service Service // underlying service.
+	name    string  // Human readable name
 
 	// latency stats
-	latencies       gostrich.IntSampler // Keeps track of host latency, in micro seconds
-	latencyAvg      int64               // Average latency
-	latencyContext  func()float64       // A function that returns what's the average latency across
-	                                    // some computation context, such as within a cluster that
-										// this supervisor belongs to.
-										// Supervisor would react when it's own latency's 2x, 4x of
-										// the preceived healthy average.
+	latencies      gostrich.IntSampler // Keeps track of host latency, in micro seconds
+	latencyAvg     int64               // Average latency
+	latencyContext func() float64      // A function that returns what's the average latency across
+	// some computation context, such as within a cluster that
+	// this supervisor belongs to.
+	// Supervisor would react when it's own latency's 2x, 4x of
+	// the preceived healthy average.
 
 	// Note the following two fields are int32 so that we can compare/set atomically
-	proberRunning   int32         // Mutable field of whether there's a prober running
-	replacerRunning int32         // Mutable field of whether we are replacing service
+	proberRunning   int32 // Mutable field of whether there's a prober running
+	replacerRunning int32 // Mutable field of whether we are replacing service
 
 	// Strategy of dealing with fault, when a service is marked dead.
 	//   - To start a prober to probe
@@ -153,7 +153,7 @@ type Supervisor struct {
 func NewSupervisor(
 	name string,
 	service Service,
-	latencyContext func()float64,
+	latencyContext func() float64,
 	reporter ServiceReporter,
 	proberReq interface{},
 	serviceMaker ServiceMaker) *Supervisor {
@@ -177,7 +177,7 @@ func NewSupervisor(
 func NewReplaceable(
 	name string,
 	service Service,
-	latencyContext func()float64,
+	latencyContext func() float64,
 	reporter ServiceReporter,
 	serviceMaker ServiceMaker) *Supervisor {
 	return &Supervisor{
@@ -196,7 +196,7 @@ func NewReplaceable(
 }
 
 func MicroTilNow(then time.Time) int64 {
-	return time.Now().Sub(then).Nanoseconds()/1000
+	return time.Now().Sub(then).Nanoseconds() / 1000
 }
 
 func (s *Supervisor) isDead() bool {
@@ -204,7 +204,7 @@ func (s *Supervisor) isDead() bool {
 		return false
 	}
 	avg := atomic.LoadInt64(&(s.latencyAvg))
-	overallAvg :=  s.latencyContext()
+	overallAvg := s.latencyContext()
 	return float64(avg) >= deadThreshold*overallAvg
 }
 
@@ -234,7 +234,7 @@ func (s *Supervisor) Serve(req interface{}, rsp interface{}, timeout time.Durati
 		if !s.latencies.IsFull() {
 			latency = maxErrorMicros
 		} else {
-			latency = int64(math.Min(s.latencyContext() * errorFactor, float64(maxErrorMicros)))
+			latency = int64(math.Min(s.latencyContext()*errorFactor, float64(maxErrorMicros)))
 		}
 	}
 
@@ -269,9 +269,9 @@ func (s *Supervisor) Serve(req interface{}, rsp interface{}, timeout time.Durati
 				s.service = nil
 				s.svcLock.Unlock()
 				go func() {
-					log.Printf("Service \"%v\" gone bad, start replacer routine. This will " +
-					           "try replacing underlying service at fixed interval, until " +
-							   "service become healthy.", s.name)
+					log.Printf("Service \"%v\" gone bad, start replacer routine. This will "+
+						"try replacing underlying service at fixed interval, until "+
+						"service become healthy.", s.name)
 					for {
 						_, newService, err := s.serviceMaker.(ServiceMaker).Make()
 						if err == nil {
@@ -372,7 +372,7 @@ type Cluster struct {
 
 // this is only called if there's at least one downstream service register. so this must succeed
 // TODO: tricky part though is the case of cold start
-func (c *Cluster) LatencyAvg()float64 {
+func (c *Cluster) LatencyAvg() float64 {
 	c.Lock.RLock()
 	defer c.Lock.RUnlock()
 
@@ -384,7 +384,7 @@ func (c *Cluster) LatencyAvg()float64 {
 }
 
 // this is only called if there's at least one downstream service register. so this must succeed
-func (c *Cluster) pickAService()*Supervisor {
+func (c *Cluster) pickAService() *Supervisor {
 	prob := 0.0
 	latencyC := c.LatencyAvg()
 	var s *Supervisor
@@ -397,7 +397,7 @@ func (c *Cluster) pickAService()*Supervisor {
 			// if all services are dead, we will choose the last one, this is by design
 			continue
 		}
-	    prob = math.Min(1, (latencyC * latencyBuffer) / float64(s.latencyAvg))
+		prob = math.Min(1, (latencyC*latencyBuffer)/float64(s.latencyAvg))
 	}
 	return s
 }
@@ -506,7 +506,7 @@ type ReliableServiceConf struct {
 	Concurrency  int            // default to 1
 	Prober       interface{}    // default to nil
 	Stats        gostrich.Stats // default to nil
-	PerHostStats bool          // whether to report per host stats
+	PerHostStats bool           // whether to report per host stats
 }
 
 func NewReliableService(conf ReliableServiceConf) Service {
@@ -543,7 +543,7 @@ func NewReliableService(conf ReliableServiceConf) Service {
 			services[j] = NewReplaceable(
 				fmt.Sprintf("%v:conn:%v", conf.Name, j),
 				svc,
-				func()float64 {
+				func() float64 {
 					return cluster.LatencyAvg()
 				},
 				nil,
@@ -557,7 +557,7 @@ func NewReliableService(conf ReliableServiceConf) Service {
 		supers[i] = NewSupervisor(
 			sname,
 			cluster,
-			func()float64 {
+			func() float64 {
 				return top.LatencyAvg()
 			},
 			reporter,

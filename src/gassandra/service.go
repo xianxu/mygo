@@ -3,12 +3,12 @@ package gassandra
 // Simple wrapper of cassandra behind the rpcx.Service, to take advantage of
 // Supervisor, Replaceable and Cluster.
 import (
+	thrift "github.com/samuel/go-thrift"
+	"log"
+	"net"
 	"net/rpc"
 	"rpcx"
 	"time"
-	"net"
-	"log"
-	thrift "github.com/samuel/go-thrift"
 )
 
 // Keyspace on a particular host

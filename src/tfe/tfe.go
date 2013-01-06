@@ -5,12 +5,12 @@ package tfe
  */
 import (
 	"io"
-	"net/http"
-	"strings"
 	"log"
-	"strconv"
-	"time"
+	"net/http"
 	"rpcx"
+	"strconv"
+	"strings"
+	"time"
 )
 
 var (

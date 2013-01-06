@@ -31,10 +31,10 @@ var (
 	AdminPort       = flag.Int("admin_port", 8300, "admin port")
 	DebugPort       = flag.Int("debug_port", 6300, "debug port")
 	JsonLineBreak   = flag.Bool("json_line_break", true, "whether break lines for json")
-	StatsSampleSize = flag.Int("stats_sample_size", 1001, "how many samples to keep for stats, " +
-	                           "to compute average etc.")
-	PortOffset      = flag.Int("port_offset", 0, "Offset serving port by this much. This is used " +
-	                           "to start up multiple services on same host")
+	StatsSampleSize = flag.Int("stats_sample_size", 1001, "how many samples to keep for stats, "+
+		"to compute average etc.")
+	PortOffset = flag.Int("port_offset", 0, "Offset serving port by this much. This is used "+
+		"to start up multiple services on same host")
 
 	// debugging
 	NumCPU     = flag.Int("num_cpu", 1, "Number of cpu to use. Use 0 to use all CPU")
@@ -131,7 +131,7 @@ type statsRecord struct {
 }
 
 type adminServer struct {
-	stats *statsRecord
+	stats        *statsRecord
 	shutdownHook func()
 }
 
@@ -564,8 +564,8 @@ func (admin *adminServer) StartToLive(adminPort int, jsonLineBreak bool, registe
 	// register other handlers
 	if registers != nil {
 		for _, register := range registers {
-		  register(mux)
-	    }
+			register(mux)
+		}
 	}
 
 	server := http.Server{
@@ -598,7 +598,7 @@ func AdminServer() *adminServer {
 	adminLock.Lock()
 	defer adminLock.Unlock()
 	if admin == nil {
-		admin = &adminServer{ NewStats(*StatsSampleSize), nil }
+		admin = &adminServer{NewStats(*StatsSampleSize), nil}
 
 		// some basic stats
 		admin.stats.AddGauge("uptime", func() float64 {
@@ -668,6 +668,7 @@ func UpdatePort(address string, offset int) string {
 
 // Int64 slice that allows sorting
 type Int64Slice []int64
+
 func (ints Int64Slice) Len() int {
 	return len([]int64(ints))
 }

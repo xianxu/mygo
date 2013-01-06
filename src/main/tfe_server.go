@@ -6,9 +6,9 @@ import (
 	_ "tfe/confs"
 
 	"flag"
+	"log"
 	"net/http"
 	"time"
-	"log"
 )
 
 var (

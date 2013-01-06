@@ -1,11 +1,11 @@
 package confs
 
 import (
+	"gostrich"
+	"log"
+	"rpcx"
 	"tfe"
 	"time"
-	"log"
-	"gostrich"
-	"rpcx"
 )
 
 func init() {

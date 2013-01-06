@@ -1,10 +1,10 @@
 package tfe
 
 import (
-	"time"
 	"gostrich"
 	"net/http"
 	"rpcx"
+	"time"
 )
 
 type StaticHttpCluster struct {
@@ -14,7 +14,7 @@ type StaticHttpCluster struct {
 	Retries           int
 	ProberReq         interface{}
 	CacheResponseBody bool
-	PerHostStats      bool   // whether to report per host stats.
+	PerHostStats      bool // whether to report per host stats.
 
 	// http.Transport config
 	DisableKeepAlives   bool
@@ -40,7 +40,7 @@ func CreateStaticHttpCluster(config StaticHttpCluster) *rpcx.Cluster {
 		services[i] = rpcx.NewSupervisor(
 			h,
 			withTimeout,
-			func()float64{
+			func() float64 {
 				return top.LatencyAvg()
 			},
 			reporter,

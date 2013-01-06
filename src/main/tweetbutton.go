@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"gassandra"
 	"gostrich"
+	"log"
 	"net/http"
 	"net/url"
 	"rpcx"
 	"strings"
 	"time"
-	"log"
 )
 
 var (

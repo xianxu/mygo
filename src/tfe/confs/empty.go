@@ -1,8 +1,8 @@
 package confs
 
 import (
-	"tfe"
 	"log"
+	"tfe"
 )
 
 func init() {

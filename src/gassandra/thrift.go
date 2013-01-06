@@ -11,9 +11,9 @@ const Version = "19.33.0"
 
 type Compression int32
 
-var(
-	CompressionGzip = Compression(1)
-	CompressionNone = Compression(2)
+var (
+	CompressionGzip   = Compression(1)
+	CompressionNone   = Compression(2)
 	CompressionByName = map[string]Compression{
 		"Compression.GZIP": CompressionGzip,
 		"Compression.NONE": CompressionNone,
@@ -37,7 +37,7 @@ func (e Compression) MarshalJSON() ([]byte, error) {
 	if name == "" {
 		name = strconv.Itoa(int(e))
 	}
-	return []byte("\""+name+"\""), nil
+	return []byte("\"" + name + "\""), nil
 }
 
 func (e *Compression) UnmarshalJSON(b []byte) error {
@@ -53,34 +53,34 @@ func (e *Compression) UnmarshalJSON(b []byte) error {
 
 type ConsistencyLevel int32
 
-var(
-	ConsistencyLevelAll = ConsistencyLevel(5)
-	ConsistencyLevelAny = ConsistencyLevel(6)
-	ConsistencyLevelEachQuorum = ConsistencyLevel(4)
+var (
+	ConsistencyLevelAll         = ConsistencyLevel(5)
+	ConsistencyLevelAny         = ConsistencyLevel(6)
+	ConsistencyLevelEachQuorum  = ConsistencyLevel(4)
 	ConsistencyLevelLocalQuorum = ConsistencyLevel(3)
-	ConsistencyLevelOne = ConsistencyLevel(1)
-	ConsistencyLevelQuorum = ConsistencyLevel(2)
-	ConsistencyLevelThree = ConsistencyLevel(8)
-	ConsistencyLevelTwo = ConsistencyLevel(7)
-	ConsistencyLevelByName = map[string]ConsistencyLevel{
-		"ConsistencyLevel.ALL": ConsistencyLevelAll,
-		"ConsistencyLevel.ANY": ConsistencyLevelAny,
-		"ConsistencyLevel.EACH_QUORUM": ConsistencyLevelEachQuorum,
+	ConsistencyLevelOne         = ConsistencyLevel(1)
+	ConsistencyLevelQuorum      = ConsistencyLevel(2)
+	ConsistencyLevelThree       = ConsistencyLevel(8)
+	ConsistencyLevelTwo         = ConsistencyLevel(7)
+	ConsistencyLevelByName      = map[string]ConsistencyLevel{
+		"ConsistencyLevel.ALL":          ConsistencyLevelAll,
+		"ConsistencyLevel.ANY":          ConsistencyLevelAny,
+		"ConsistencyLevel.EACH_QUORUM":  ConsistencyLevelEachQuorum,
 		"ConsistencyLevel.LOCAL_QUORUM": ConsistencyLevelLocalQuorum,
-		"ConsistencyLevel.ONE": ConsistencyLevelOne,
-		"ConsistencyLevel.QUORUM": ConsistencyLevelQuorum,
-		"ConsistencyLevel.THREE": ConsistencyLevelThree,
-		"ConsistencyLevel.TWO": ConsistencyLevelTwo,
+		"ConsistencyLevel.ONE":          ConsistencyLevelOne,
+		"ConsistencyLevel.QUORUM":       ConsistencyLevelQuorum,
+		"ConsistencyLevel.THREE":        ConsistencyLevelThree,
+		"ConsistencyLevel.TWO":          ConsistencyLevelTwo,
 	}
 	ConsistencyLevelByValue = map[ConsistencyLevel]string{
-		ConsistencyLevelAll: "ConsistencyLevel.ALL",
-		ConsistencyLevelAny: "ConsistencyLevel.ANY",
-		ConsistencyLevelEachQuorum: "ConsistencyLevel.EACH_QUORUM",
+		ConsistencyLevelAll:         "ConsistencyLevel.ALL",
+		ConsistencyLevelAny:         "ConsistencyLevel.ANY",
+		ConsistencyLevelEachQuorum:  "ConsistencyLevel.EACH_QUORUM",
 		ConsistencyLevelLocalQuorum: "ConsistencyLevel.LOCAL_QUORUM",
-		ConsistencyLevelOne: "ConsistencyLevel.ONE",
-		ConsistencyLevelQuorum: "ConsistencyLevel.QUORUM",
-		ConsistencyLevelThree: "ConsistencyLevel.THREE",
-		ConsistencyLevelTwo: "ConsistencyLevel.TWO",
+		ConsistencyLevelOne:         "ConsistencyLevel.ONE",
+		ConsistencyLevelQuorum:      "ConsistencyLevel.QUORUM",
+		ConsistencyLevelThree:       "ConsistencyLevel.THREE",
+		ConsistencyLevelTwo:         "ConsistencyLevel.TWO",
 	}
 )
 
@@ -97,7 +97,7 @@ func (e ConsistencyLevel) MarshalJSON() ([]byte, error) {
 	if name == "" {
 		name = strconv.Itoa(int(e))
 	}
-	return []byte("\""+name+"\""), nil
+	return []byte("\"" + name + "\""), nil
 }
 
 func (e *ConsistencyLevel) UnmarshalJSON(b []byte) error {
@@ -113,17 +113,17 @@ func (e *ConsistencyLevel) UnmarshalJSON(b []byte) error {
 
 type CqlResultType int32
 
-var(
-	CqlResultTypeInt = CqlResultType(3)
-	CqlResultTypeRows = CqlResultType(1)
-	CqlResultTypeVoid = CqlResultType(2)
+var (
+	CqlResultTypeInt    = CqlResultType(3)
+	CqlResultTypeRows   = CqlResultType(1)
+	CqlResultTypeVoid   = CqlResultType(2)
 	CqlResultTypeByName = map[string]CqlResultType{
-		"CqlResultType.INT": CqlResultTypeInt,
+		"CqlResultType.INT":  CqlResultTypeInt,
 		"CqlResultType.ROWS": CqlResultTypeRows,
 		"CqlResultType.VOID": CqlResultTypeVoid,
 	}
 	CqlResultTypeByValue = map[CqlResultType]string{
-		CqlResultTypeInt: "CqlResultType.INT",
+		CqlResultTypeInt:  "CqlResultType.INT",
 		CqlResultTypeRows: "CqlResultType.ROWS",
 		CqlResultTypeVoid: "CqlResultType.VOID",
 	}
@@ -142,7 +142,7 @@ func (e CqlResultType) MarshalJSON() ([]byte, error) {
 	if name == "" {
 		name = strconv.Itoa(int(e))
 	}
-	return []byte("\""+name+"\""), nil
+	return []byte("\"" + name + "\""), nil
 }
 
 func (e *CqlResultType) UnmarshalJSON(b []byte) error {
@@ -158,24 +158,24 @@ func (e *CqlResultType) UnmarshalJSON(b []byte) error {
 
 type IndexOperator int32
 
-var(
-	IndexOperatorEq = IndexOperator(0)
-	IndexOperatorGt = IndexOperator(2)
-	IndexOperatorGte = IndexOperator(1)
-	IndexOperatorLt = IndexOperator(4)
-	IndexOperatorLte = IndexOperator(3)
+var (
+	IndexOperatorEq     = IndexOperator(0)
+	IndexOperatorGt     = IndexOperator(2)
+	IndexOperatorGte    = IndexOperator(1)
+	IndexOperatorLt     = IndexOperator(4)
+	IndexOperatorLte    = IndexOperator(3)
 	IndexOperatorByName = map[string]IndexOperator{
-		"IndexOperator.EQ": IndexOperatorEq,
-		"IndexOperator.GT": IndexOperatorGt,
+		"IndexOperator.EQ":  IndexOperatorEq,
+		"IndexOperator.GT":  IndexOperatorGt,
 		"IndexOperator.GTE": IndexOperatorGte,
-		"IndexOperator.LT": IndexOperatorLt,
+		"IndexOperator.LT":  IndexOperatorLt,
 		"IndexOperator.LTE": IndexOperatorLte,
 	}
 	IndexOperatorByValue = map[IndexOperator]string{
-		IndexOperatorEq: "IndexOperator.EQ",
-		IndexOperatorGt: "IndexOperator.GT",
+		IndexOperatorEq:  "IndexOperator.EQ",
+		IndexOperatorGt:  "IndexOperator.GT",
 		IndexOperatorGte: "IndexOperator.GTE",
-		IndexOperatorLt: "IndexOperator.LT",
+		IndexOperatorLt:  "IndexOperator.LT",
 		IndexOperatorLte: "IndexOperator.LTE",
 	}
 )
@@ -193,7 +193,7 @@ func (e IndexOperator) MarshalJSON() ([]byte, error) {
 	if name == "" {
 		name = strconv.Itoa(int(e))
 	}
-	return []byte("\""+name+"\""), nil
+	return []byte("\"" + name + "\""), nil
 }
 
 func (e *IndexOperator) UnmarshalJSON(b []byte) error {
@@ -209,16 +209,16 @@ func (e *IndexOperator) UnmarshalJSON(b []byte) error {
 
 type IndexType int32
 
-var(
+var (
 	IndexTypeCustom = IndexType(1)
-	IndexTypeKeys = IndexType(0)
+	IndexTypeKeys   = IndexType(0)
 	IndexTypeByName = map[string]IndexType{
 		"IndexType.CUSTOM": IndexTypeCustom,
-		"IndexType.KEYS": IndexTypeKeys,
+		"IndexType.KEYS":   IndexTypeKeys,
 	}
 	IndexTypeByValue = map[IndexType]string{
 		IndexTypeCustom: "IndexType.CUSTOM",
-		IndexTypeKeys: "IndexType.KEYS",
+		IndexTypeKeys:   "IndexType.KEYS",
 	}
 )
 
@@ -235,7 +235,7 @@ func (e IndexType) MarshalJSON() ([]byte, error) {
 	if name == "" {
 		name = strconv.Itoa(int(e))
 	}
-	return []byte("\""+name+"\""), nil
+	return []byte("\"" + name + "\""), nil
 }
 
 func (e *IndexType) UnmarshalJSON(b []byte) error {
@@ -254,188 +254,188 @@ type AuthenticationRequest struct {
 }
 
 type CfDef struct {
-	Keyspace string `thrift:"1,required" json:"keyspace"`
-	Name string `thrift:"2,required" json:"name"`
-	ColumnType string `thrift:"3" json:"column_type"`
-	ComparatorType string `thrift:"5" json:"comparator_type"`
-	SubcomparatorType string `thrift:"6" json:"subcomparator_type"`
-	Comment string `thrift:"8" json:"comment"`
-	ReadRepairChance float64 `thrift:"12" json:"read_repair_chance"`
-	ColumnMetadata []*ColumnDef `thrift:"13" json:"column_metadata"`
-	GcGraceSeconds int32 `thrift:"14" json:"gc_grace_seconds"`
-	DefaultValidationClass string `thrift:"15" json:"default_validation_class"`
-	Id int32 `thrift:"16" json:"id"`
-	MinCompactionThreshold int32 `thrift:"17" json:"min_compaction_threshold"`
-	MaxCompactionThreshold int32 `thrift:"18" json:"max_compaction_threshold"`
-	ReplicateOnWrite bool `thrift:"24" json:"replicate_on_write"`
-	KeyValidationClass string `thrift:"26" json:"key_validation_class"`
-	KeyAlias []byte `thrift:"28" json:"key_alias"`
-	CompactionStrategy string `thrift:"29" json:"compaction_strategy"`
-	CompactionStrategyOptions map[string]string `thrift:"30" json:"compaction_strategy_options"`
-	CompressionOptions map[string]string `thrift:"32" json:"compression_options"`
-	BloomFilterFpChance float64 `thrift:"33" json:"bloom_filter_fp_chance"`
-	Caching string `thrift:"34" json:"caching"`
-	DclocalReadRepairChance float64 `thrift:"37" json:"dclocal_read_repair_chance"`
-	RowCacheSize float64 `thrift:"9" json:"row_cache_size"`
-	KeyCacheSize float64 `thrift:"11" json:"key_cache_size"`
-	RowCacheSavePeriodInSeconds int32 `thrift:"19" json:"row_cache_save_period_in_seconds"`
-	KeyCacheSavePeriodInSeconds int32 `thrift:"20" json:"key_cache_save_period_in_seconds"`
-	MemtableFlushAfterMins int32 `thrift:"21" json:"memtable_flush_after_mins"`
-	MemtableThroughputInMb int32 `thrift:"22" json:"memtable_throughput_in_mb"`
-	MemtableOperationsInMillions float64 `thrift:"23" json:"memtable_operations_in_millions"`
-	MergeShardsChance float64 `thrift:"25" json:"merge_shards_chance"`
-	RowCacheProvider string `thrift:"27" json:"row_cache_provider"`
-	RowCacheKeysToSave int32 `thrift:"31" json:"row_cache_keys_to_save"`
+	Keyspace                     string            `thrift:"1,required" json:"keyspace"`
+	Name                         string            `thrift:"2,required" json:"name"`
+	ColumnType                   string            `thrift:"3" json:"column_type"`
+	ComparatorType               string            `thrift:"5" json:"comparator_type"`
+	SubcomparatorType            string            `thrift:"6" json:"subcomparator_type"`
+	Comment                      string            `thrift:"8" json:"comment"`
+	ReadRepairChance             float64           `thrift:"12" json:"read_repair_chance"`
+	ColumnMetadata               []*ColumnDef      `thrift:"13" json:"column_metadata"`
+	GcGraceSeconds               int32             `thrift:"14" json:"gc_grace_seconds"`
+	DefaultValidationClass       string            `thrift:"15" json:"default_validation_class"`
+	Id                           int32             `thrift:"16" json:"id"`
+	MinCompactionThreshold       int32             `thrift:"17" json:"min_compaction_threshold"`
+	MaxCompactionThreshold       int32             `thrift:"18" json:"max_compaction_threshold"`
+	ReplicateOnWrite             bool              `thrift:"24" json:"replicate_on_write"`
+	KeyValidationClass           string            `thrift:"26" json:"key_validation_class"`
+	KeyAlias                     []byte            `thrift:"28" json:"key_alias"`
+	CompactionStrategy           string            `thrift:"29" json:"compaction_strategy"`
+	CompactionStrategyOptions    map[string]string `thrift:"30" json:"compaction_strategy_options"`
+	CompressionOptions           map[string]string `thrift:"32" json:"compression_options"`
+	BloomFilterFpChance          float64           `thrift:"33" json:"bloom_filter_fp_chance"`
+	Caching                      string            `thrift:"34" json:"caching"`
+	DclocalReadRepairChance      float64           `thrift:"37" json:"dclocal_read_repair_chance"`
+	RowCacheSize                 float64           `thrift:"9" json:"row_cache_size"`
+	KeyCacheSize                 float64           `thrift:"11" json:"key_cache_size"`
+	RowCacheSavePeriodInSeconds  int32             `thrift:"19" json:"row_cache_save_period_in_seconds"`
+	KeyCacheSavePeriodInSeconds  int32             `thrift:"20" json:"key_cache_save_period_in_seconds"`
+	MemtableFlushAfterMins       int32             `thrift:"21" json:"memtable_flush_after_mins"`
+	MemtableThroughputInMb       int32             `thrift:"22" json:"memtable_throughput_in_mb"`
+	MemtableOperationsInMillions float64           `thrift:"23" json:"memtable_operations_in_millions"`
+	MergeShardsChance            float64           `thrift:"25" json:"merge_shards_chance"`
+	RowCacheProvider             string            `thrift:"27" json:"row_cache_provider"`
+	RowCacheKeysToSave           int32             `thrift:"31" json:"row_cache_keys_to_save"`
 }
 
 type Column struct {
-	Name []byte `thrift:"1,required" json:"name"`
-	Value []byte `thrift:"2" json:"value"`
-	Timestamp int64 `thrift:"3" json:"timestamp"`
-	Ttl int32 `thrift:"4" json:"ttl"`
+	Name      []byte `thrift:"1,required" json:"name"`
+	Value     []byte `thrift:"2" json:"value"`
+	Timestamp int64  `thrift:"3" json:"timestamp"`
+	Ttl       int32  `thrift:"4" json:"ttl"`
 }
 
 type ColumnDef struct {
-	Name []byte `thrift:"1,required" json:"name"`
-	ValidationClass string `thrift:"2,required" json:"validation_class"`
-	IndexType IndexType `thrift:"3" json:"index_type"`
-	IndexName string `thrift:"4" json:"index_name"`
-	IndexOptions map[string]string `thrift:"5" json:"index_options"`
+	Name            []byte            `thrift:"1,required" json:"name"`
+	ValidationClass string            `thrift:"2,required" json:"validation_class"`
+	IndexType       IndexType         `thrift:"3" json:"index_type"`
+	IndexName       string            `thrift:"4" json:"index_name"`
+	IndexOptions    map[string]string `thrift:"5" json:"index_options"`
 }
 
 type ColumnOrSuperColumn struct {
-	Column *Column `thrift:"1" json:"column"`
-	SuperColumn *SuperColumn `thrift:"2" json:"super_column"`
-	CounterColumn *CounterColumn `thrift:"3" json:"counter_column"`
+	Column             *Column             `thrift:"1" json:"column"`
+	SuperColumn        *SuperColumn        `thrift:"2" json:"super_column"`
+	CounterColumn      *CounterColumn      `thrift:"3" json:"counter_column"`
 	CounterSuperColumn *CounterSuperColumn `thrift:"4" json:"counter_super_column"`
 }
 
 type ColumnParent struct {
 	ColumnFamily string `thrift:"3,required" json:"column_family"`
-	SuperColumn []byte `thrift:"4" json:"super_column"`
+	SuperColumn  []byte `thrift:"4" json:"super_column"`
 }
 
 type ColumnPath struct {
 	ColumnFamily string `thrift:"3,required" json:"column_family"`
-	SuperColumn []byte `thrift:"4" json:"super_column"`
-	Column []byte `thrift:"5" json:"column"`
+	SuperColumn  []byte `thrift:"4" json:"super_column"`
+	Column       []byte `thrift:"5" json:"column"`
 }
 
 type CounterColumn struct {
-	Name []byte `thrift:"1,required" json:"name"`
-	Value int64 `thrift:"2,required" json:"value"`
+	Name  []byte `thrift:"1,required" json:"name"`
+	Value int64  `thrift:"2,required" json:"value"`
 }
 
 type CounterSuperColumn struct {
-	Name []byte `thrift:"1,required" json:"name"`
+	Name    []byte           `thrift:"1,required" json:"name"`
 	Columns []*CounterColumn `thrift:"2,required" json:"columns"`
 }
 
 type CqlMetadata struct {
-	NameTypes map[string]string `thrift:"1,required" json:"name_types"`
-	ValueTypes map[string]string `thrift:"2,required" json:"value_types"`
-	DefaultNameType string `thrift:"3,required" json:"default_name_type"`
-	DefaultValueType string `thrift:"4,required" json:"default_value_type"`
+	NameTypes        map[string]string `thrift:"1,required" json:"name_types"`
+	ValueTypes       map[string]string `thrift:"2,required" json:"value_types"`
+	DefaultNameType  string            `thrift:"3,required" json:"default_name_type"`
+	DefaultValueType string            `thrift:"4,required" json:"default_value_type"`
 }
 
 type CqlPreparedResult struct {
-	ItemId int32 `thrift:"1,required" json:"itemId"`
-	Count int32 `thrift:"2,required" json:"count"`
+	ItemId        int32    `thrift:"1,required" json:"itemId"`
+	Count         int32    `thrift:"2,required" json:"count"`
 	VariableTypes []string `thrift:"3" json:"variable_types"`
 	VariableNames []string `thrift:"4" json:"variable_names"`
 }
 
 type CqlResult struct {
-	Type CqlResultType `thrift:"1,required" json:"type"`
-	Rows []*CqlRow `thrift:"2" json:"rows"`
-	Num int32 `thrift:"3" json:"num"`
-	Schema *CqlMetadata `thrift:"4" json:"schema"`
+	Type   CqlResultType `thrift:"1,required" json:"type"`
+	Rows   []*CqlRow     `thrift:"2" json:"rows"`
+	Num    int32         `thrift:"3" json:"num"`
+	Schema *CqlMetadata  `thrift:"4" json:"schema"`
 }
 
 type CqlRow struct {
-	Key []byte `thrift:"1,required" json:"key"`
+	Key     []byte    `thrift:"1,required" json:"key"`
 	Columns []*Column `thrift:"2,required" json:"columns"`
 }
 
 type Deletion struct {
-	Timestamp int64 `thrift:"1" json:"timestamp"`
-	SuperColumn []byte `thrift:"2" json:"super_column"`
-	Predicate *SlicePredicate `thrift:"3" json:"predicate"`
+	Timestamp   int64           `thrift:"1" json:"timestamp"`
+	SuperColumn []byte          `thrift:"2" json:"super_column"`
+	Predicate   *SlicePredicate `thrift:"3" json:"predicate"`
 }
 
 type EndpointDetails struct {
-	Host string `thrift:"1,required" json:"host"`
+	Host       string `thrift:"1,required" json:"host"`
 	Datacenter string `thrift:"2,required" json:"datacenter"`
-	Rack string `thrift:"3" json:"rack"`
+	Rack       string `thrift:"3" json:"rack"`
 }
 
 type IndexClause struct {
 	Expressions []*IndexExpression `thrift:"1,required" json:"expressions"`
-	StartKey []byte `thrift:"2,required" json:"start_key"`
-	Count int32 `thrift:"3,required" json:"count"`
+	StartKey    []byte             `thrift:"2,required" json:"start_key"`
+	Count       int32              `thrift:"3,required" json:"count"`
 }
 
 type IndexExpression struct {
-	ColumnName []byte `thrift:"1,required" json:"column_name"`
-	Op IndexOperator `thrift:"2,required" json:"op"`
-	Value []byte `thrift:"3,required" json:"value"`
+	ColumnName []byte        `thrift:"1,required" json:"column_name"`
+	Op         IndexOperator `thrift:"2,required" json:"op"`
+	Value      []byte        `thrift:"3,required" json:"value"`
 }
 
 type KeyCount struct {
-	Key []byte `thrift:"1,required" json:"key"`
-	Count int32 `thrift:"2,required" json:"count"`
+	Key   []byte `thrift:"1,required" json:"key"`
+	Count int32  `thrift:"2,required" json:"count"`
 }
 
 type KeyRange struct {
-	StartKey []byte `thrift:"1" json:"start_key"`
-	EndKey []byte `thrift:"2" json:"end_key"`
-	StartToken string `thrift:"3" json:"start_token"`
-	EndToken string `thrift:"4" json:"end_token"`
-	RowFilter []*IndexExpression `thrift:"6" json:"row_filter"`
-	Count int32 `thrift:"5,required" json:"count"`
+	StartKey   []byte             `thrift:"1" json:"start_key"`
+	EndKey     []byte             `thrift:"2" json:"end_key"`
+	StartToken string             `thrift:"3" json:"start_token"`
+	EndToken   string             `thrift:"4" json:"end_token"`
+	RowFilter  []*IndexExpression `thrift:"6" json:"row_filter"`
+	Count      int32              `thrift:"5,required" json:"count"`
 }
 
 type KeySlice struct {
-	Key []byte `thrift:"1,required" json:"key"`
+	Key     []byte                 `thrift:"1,required" json:"key"`
 	Columns []*ColumnOrSuperColumn `thrift:"2,required" json:"columns"`
 }
 
 type KsDef struct {
-	Name string `thrift:"1,required" json:"name"`
-	StrategyClass string `thrift:"2,required" json:"strategy_class"`
-	StrategyOptions map[string]string `thrift:"3" json:"strategy_options"`
-	ReplicationFactor int32 `thrift:"4" json:"replication_factor"`
-	CfDefs []*CfDef `thrift:"5,required" json:"cf_defs"`
-	DurableWrites bool `thrift:"6" json:"durable_writes"`
+	Name              string            `thrift:"1,required" json:"name"`
+	StrategyClass     string            `thrift:"2,required" json:"strategy_class"`
+	StrategyOptions   map[string]string `thrift:"3" json:"strategy_options"`
+	ReplicationFactor int32             `thrift:"4" json:"replication_factor"`
+	CfDefs            []*CfDef          `thrift:"5,required" json:"cf_defs"`
+	DurableWrites     bool              `thrift:"6" json:"durable_writes"`
 }
 
 type Mutation struct {
 	ColumnOrSupercolumn *ColumnOrSuperColumn `thrift:"1" json:"column_or_supercolumn"`
-	Deletion *Deletion `thrift:"2" json:"deletion"`
+	Deletion            *Deletion            `thrift:"2" json:"deletion"`
 }
 
 type SlicePredicate struct {
-	ColumnNames [][]byte `thrift:"1" json:"column_names"`
-	SliceRange *SliceRange `thrift:"2" json:"slice_range"`
+	ColumnNames [][]byte    `thrift:"1" json:"column_names"`
+	SliceRange  *SliceRange `thrift:"2" json:"slice_range"`
 }
 
 type SliceRange struct {
-	Start []byte `thrift:"1,required" json:"start"`
-	Finish []byte `thrift:"2,required" json:"finish"`
-	Reversed bool `thrift:"3,required" json:"reversed"`
-	Count int32 `thrift:"4,required" json:"count"`
+	Start    []byte `thrift:"1,required" json:"start"`
+	Finish   []byte `thrift:"2,required" json:"finish"`
+	Reversed bool   `thrift:"3,required" json:"reversed"`
+	Count    int32  `thrift:"4,required" json:"count"`
 }
 
 type SuperColumn struct {
-	Name []byte `thrift:"1,required" json:"name"`
+	Name    []byte    `thrift:"1,required" json:"name"`
 	Columns []*Column `thrift:"2,required" json:"columns"`
 }
 
 type TokenRange struct {
-	StartToken string `thrift:"1,required" json:"start_token"`
-	EndToken string `thrift:"2,required" json:"end_token"`
-	Endpoints []string `thrift:"3,required" json:"endpoints"`
-	RpcEndpoints []string `thrift:"4" json:"rpc_endpoints"`
+	StartToken      string             `thrift:"1,required" json:"start_token"`
+	EndToken        string             `thrift:"2,required" json:"end_token"`
+	Endpoints       []string           `thrift:"3,required" json:"endpoints"`
+	RpcEndpoints    []string           `thrift:"4" json:"rpc_endpoints"`
 	EndpointDetails []*EndpointDetails `thrift:"5" json:"endpoint_details"`
 }
 
@@ -1044,27 +1044,27 @@ func (s *CassandraServer) Truncate(req *CassandraTruncateRequest, res *Cassandra
 }
 
 type CassandraAddRequest struct {
-	Key []byte `thrift:"1,required" json:"key"`
-	ColumnParent *ColumnParent `thrift:"2,required" json:"column_parent"`
-	Column *CounterColumn `thrift:"3,required" json:"column"`
+	Key              []byte           `thrift:"1,required" json:"key"`
+	ColumnParent     *ColumnParent    `thrift:"2,required" json:"column_parent"`
+	Column           *CounterColumn   `thrift:"3,required" json:"column"`
 	ConsistencyLevel ConsistencyLevel `thrift:"4,required" json:"consistency_level"`
 }
 
 type CassandraAddResponse struct {
 	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Ue *UnavailableException `thrift:"2" json:"ue"`
-	Te *TimedOutException `thrift:"3" json:"te"`
+	Ue  *UnavailableException    `thrift:"2" json:"ue"`
+	Te  *TimedOutException       `thrift:"3" json:"te"`
 }
 
 type CassandraBatchMutateRequest struct {
-	MutationMap map[string]map[string][]*Mutation `thrift:"1,required" json:"mutation_map"`
-	ConsistencyLevel ConsistencyLevel `thrift:"2,required" json:"consistency_level"`
+	MutationMap      map[string]map[string][]*Mutation `thrift:"1,required" json:"mutation_map"`
+	ConsistencyLevel ConsistencyLevel                  `thrift:"2,required" json:"consistency_level"`
 }
 
 type CassandraBatchMutateResponse struct {
 	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Ue *UnavailableException `thrift:"2" json:"ue"`
-	Te *TimedOutException `thrift:"3" json:"te"`
+	Ue  *UnavailableException    `thrift:"2" json:"ue"`
+	Te  *TimedOutException       `thrift:"3" json:"te"`
 }
 
 type CassandraDescribeClusterNameRequest struct {
@@ -1079,17 +1079,17 @@ type CassandraDescribeKeyspaceRequest struct {
 }
 
 type CassandraDescribeKeyspaceResponse struct {
-	Value *KsDef `thrift:"0" json:"value"`
-	Nfe *NotFoundException `thrift:"1" json:"nfe"`
-	Ire *InvalidRequestException `thrift:"2" json:"ire"`
+	Value *KsDef                   `thrift:"0" json:"value"`
+	Nfe   *NotFoundException       `thrift:"1" json:"nfe"`
+	Ire   *InvalidRequestException `thrift:"2" json:"ire"`
 }
 
 type CassandraDescribeKeyspacesRequest struct {
 }
 
 type CassandraDescribeKeyspacesResponse struct {
-	Value []*KsDef `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
+	Value []*KsDef                 `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException `thrift:"1" json:"ire"`
 }
 
 type CassandraDescribePartitionerRequest struct {
@@ -1104,16 +1104,16 @@ type CassandraDescribeRingRequest struct {
 }
 
 type CassandraDescribeRingResponse struct {
-	Value []*TokenRange `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
+	Value []*TokenRange            `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException `thrift:"1" json:"ire"`
 }
 
 type CassandraDescribeSchemaVersionsRequest struct {
 }
 
 type CassandraDescribeSchemaVersionsResponse struct {
-	Value map[string][]string `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
+	Value map[string][]string      `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException `thrift:"1" json:"ire"`
 }
 
 type CassandraDescribeSnitchRequest struct {
@@ -1124,23 +1124,23 @@ type CassandraDescribeSnitchResponse struct {
 }
 
 type CassandraDescribeSplitsRequest struct {
-	CfName string `thrift:"1,required" json:"cfName"`
-	StartToken string `thrift:"2,required" json:"start_token"`
-	EndToken string `thrift:"3,required" json:"end_token"`
-	KeysPerSplit int32 `thrift:"4,required" json:"keys_per_split"`
+	CfName       string `thrift:"1,required" json:"cfName"`
+	StartToken   string `thrift:"2,required" json:"start_token"`
+	EndToken     string `thrift:"3,required" json:"end_token"`
+	KeysPerSplit int32  `thrift:"4,required" json:"keys_per_split"`
 }
 
 type CassandraDescribeSplitsResponse struct {
-	Value []string `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
+	Value []string                 `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException `thrift:"1" json:"ire"`
 }
 
 type CassandraDescribeTokenMapRequest struct {
 }
 
 type CassandraDescribeTokenMapResponse struct {
-	Value map[string]string `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
+	Value map[string]string        `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException `thrift:"1" json:"ire"`
 }
 
 type CassandraDescribeVersionRequest struct {
@@ -1151,126 +1151,126 @@ type CassandraDescribeVersionResponse struct {
 }
 
 type CassandraExecuteCqlQueryRequest struct {
-	Query []byte `thrift:"1,required" json:"query"`
+	Query       []byte      `thrift:"1,required" json:"query"`
 	Compression Compression `thrift:"2,required" json:"compression"`
 }
 
 type CassandraExecuteCqlQueryResponse struct {
-	Value *CqlResult `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Ue *UnavailableException `thrift:"2" json:"ue"`
-	Te *TimedOutException `thrift:"3" json:"te"`
-	Sde *SchemaDisagreementException `thrift:"4" json:"sde"`
+	Value *CqlResult                   `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException     `thrift:"1" json:"ire"`
+	Ue    *UnavailableException        `thrift:"2" json:"ue"`
+	Te    *TimedOutException           `thrift:"3" json:"te"`
+	Sde   *SchemaDisagreementException `thrift:"4" json:"sde"`
 }
 
 type CassandraExecutePreparedCqlQueryRequest struct {
-	ItemId int32 `thrift:"1,required" json:"itemId"`
+	ItemId int32    `thrift:"1,required" json:"itemId"`
 	Values [][]byte `thrift:"2,required" json:"values"`
 }
 
 type CassandraExecutePreparedCqlQueryResponse struct {
-	Value *CqlResult `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Ue *UnavailableException `thrift:"2" json:"ue"`
-	Te *TimedOutException `thrift:"3" json:"te"`
-	Sde *SchemaDisagreementException `thrift:"4" json:"sde"`
+	Value *CqlResult                   `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException     `thrift:"1" json:"ire"`
+	Ue    *UnavailableException        `thrift:"2" json:"ue"`
+	Te    *TimedOutException           `thrift:"3" json:"te"`
+	Sde   *SchemaDisagreementException `thrift:"4" json:"sde"`
 }
 
 type CassandraGetRequest struct {
-	Key []byte `thrift:"1,required" json:"key"`
-	ColumnPath *ColumnPath `thrift:"2,required" json:"column_path"`
+	Key              []byte           `thrift:"1,required" json:"key"`
+	ColumnPath       *ColumnPath      `thrift:"2,required" json:"column_path"`
 	ConsistencyLevel ConsistencyLevel `thrift:"3,required" json:"consistency_level"`
 }
 
 type CassandraGetResponse struct {
-	Value *ColumnOrSuperColumn `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Nfe *NotFoundException `thrift:"2" json:"nfe"`
-	Ue *UnavailableException `thrift:"3" json:"ue"`
-	Te *TimedOutException `thrift:"4" json:"te"`
+	Value *ColumnOrSuperColumn     `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException `thrift:"1" json:"ire"`
+	Nfe   *NotFoundException       `thrift:"2" json:"nfe"`
+	Ue    *UnavailableException    `thrift:"3" json:"ue"`
+	Te    *TimedOutException       `thrift:"4" json:"te"`
 }
 
 type CassandraGetCountRequest struct {
-	Key []byte `thrift:"1,required" json:"key"`
-	ColumnParent *ColumnParent `thrift:"2,required" json:"column_parent"`
-	Predicate *SlicePredicate `thrift:"3,required" json:"predicate"`
+	Key              []byte           `thrift:"1,required" json:"key"`
+	ColumnParent     *ColumnParent    `thrift:"2,required" json:"column_parent"`
+	Predicate        *SlicePredicate  `thrift:"3,required" json:"predicate"`
 	ConsistencyLevel ConsistencyLevel `thrift:"4,required" json:"consistency_level"`
 }
 
 type CassandraGetCountResponse struct {
-	Value int32 `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Ue *UnavailableException `thrift:"2" json:"ue"`
-	Te *TimedOutException `thrift:"3" json:"te"`
+	Value int32                    `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException `thrift:"1" json:"ire"`
+	Ue    *UnavailableException    `thrift:"2" json:"ue"`
+	Te    *TimedOutException       `thrift:"3" json:"te"`
 }
 
 type CassandraGetIndexedSlicesRequest struct {
-	ColumnParent *ColumnParent `thrift:"1,required" json:"column_parent"`
-	IndexClause *IndexClause `thrift:"2,required" json:"index_clause"`
-	ColumnPredicate *SlicePredicate `thrift:"3,required" json:"column_predicate"`
+	ColumnParent     *ColumnParent    `thrift:"1,required" json:"column_parent"`
+	IndexClause      *IndexClause     `thrift:"2,required" json:"index_clause"`
+	ColumnPredicate  *SlicePredicate  `thrift:"3,required" json:"column_predicate"`
 	ConsistencyLevel ConsistencyLevel `thrift:"4,required" json:"consistency_level"`
 }
 
 type CassandraGetIndexedSlicesResponse struct {
-	Value []*KeySlice `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Ue *UnavailableException `thrift:"2" json:"ue"`
-	Te *TimedOutException `thrift:"3" json:"te"`
+	Value []*KeySlice              `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException `thrift:"1" json:"ire"`
+	Ue    *UnavailableException    `thrift:"2" json:"ue"`
+	Te    *TimedOutException       `thrift:"3" json:"te"`
 }
 
 type CassandraGetPagedSliceRequest struct {
-	ColumnFamily string `thrift:"1,required" json:"column_family"`
-	Range *KeyRange `thrift:"2,required" json:"range"`
-	StartColumn []byte `thrift:"3,required" json:"start_column"`
+	ColumnFamily     string           `thrift:"1,required" json:"column_family"`
+	Range            *KeyRange        `thrift:"2,required" json:"range"`
+	StartColumn      []byte           `thrift:"3,required" json:"start_column"`
 	ConsistencyLevel ConsistencyLevel `thrift:"4,required" json:"consistency_level"`
 }
 
 type CassandraGetPagedSliceResponse struct {
-	Value []*KeySlice `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Ue *UnavailableException `thrift:"2" json:"ue"`
-	Te *TimedOutException `thrift:"3" json:"te"`
+	Value []*KeySlice              `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException `thrift:"1" json:"ire"`
+	Ue    *UnavailableException    `thrift:"2" json:"ue"`
+	Te    *TimedOutException       `thrift:"3" json:"te"`
 }
 
 type CassandraGetRangeSlicesRequest struct {
-	ColumnParent *ColumnParent `thrift:"1,required" json:"column_parent"`
-	Predicate *SlicePredicate `thrift:"2,required" json:"predicate"`
-	Range *KeyRange `thrift:"3,required" json:"range"`
+	ColumnParent     *ColumnParent    `thrift:"1,required" json:"column_parent"`
+	Predicate        *SlicePredicate  `thrift:"2,required" json:"predicate"`
+	Range            *KeyRange        `thrift:"3,required" json:"range"`
 	ConsistencyLevel ConsistencyLevel `thrift:"4,required" json:"consistency_level"`
 }
 
 type CassandraGetRangeSlicesResponse struct {
-	Value []*KeySlice `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Ue *UnavailableException `thrift:"2" json:"ue"`
-	Te *TimedOutException `thrift:"3" json:"te"`
+	Value []*KeySlice              `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException `thrift:"1" json:"ire"`
+	Ue    *UnavailableException    `thrift:"2" json:"ue"`
+	Te    *TimedOutException       `thrift:"3" json:"te"`
 }
 
 type CassandraGetSliceRequest struct {
-	Key []byte `thrift:"1,required" json:"key"`
-	ColumnParent *ColumnParent `thrift:"2,required" json:"column_parent"`
-	Predicate *SlicePredicate `thrift:"3,required" json:"predicate"`
+	Key              []byte           `thrift:"1,required" json:"key"`
+	ColumnParent     *ColumnParent    `thrift:"2,required" json:"column_parent"`
+	Predicate        *SlicePredicate  `thrift:"3,required" json:"predicate"`
 	ConsistencyLevel ConsistencyLevel `thrift:"4,required" json:"consistency_level"`
 }
 
 type CassandraGetSliceResponse struct {
-	Value []*ColumnOrSuperColumn `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Ue *UnavailableException `thrift:"2" json:"ue"`
-	Te *TimedOutException `thrift:"3" json:"te"`
+	Value []*ColumnOrSuperColumn   `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException `thrift:"1" json:"ire"`
+	Ue    *UnavailableException    `thrift:"2" json:"ue"`
+	Te    *TimedOutException       `thrift:"3" json:"te"`
 }
 
 type CassandraInsertRequest struct {
-	Key []byte `thrift:"1,required" json:"key"`
-	ColumnParent *ColumnParent `thrift:"2,required" json:"column_parent"`
-	Column *Column `thrift:"3,required" json:"column"`
+	Key              []byte           `thrift:"1,required" json:"key"`
+	ColumnParent     *ColumnParent    `thrift:"2,required" json:"column_parent"`
+	Column           *Column          `thrift:"3,required" json:"column"`
 	ConsistencyLevel ConsistencyLevel `thrift:"4,required" json:"consistency_level"`
 }
 
 type CassandraInsertResponse struct {
 	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Ue *UnavailableException `thrift:"2" json:"ue"`
-	Te *TimedOutException `thrift:"3" json:"te"`
+	Ue  *UnavailableException    `thrift:"2" json:"ue"`
+	Te  *TimedOutException       `thrift:"3" json:"te"`
 }
 
 type CassandraLoginRequest struct {
@@ -1279,70 +1279,70 @@ type CassandraLoginRequest struct {
 
 type CassandraLoginResponse struct {
 	Authnx *AuthenticationException `thrift:"1" json:"authnx"`
-	Authzx *AuthorizationException `thrift:"2" json:"authzx"`
+	Authzx *AuthorizationException  `thrift:"2" json:"authzx"`
 }
 
 type CassandraMultigetCountRequest struct {
-	Keys [][]byte `thrift:"1,required" json:"keys"`
-	ColumnParent *ColumnParent `thrift:"2,required" json:"column_parent"`
-	Predicate *SlicePredicate `thrift:"3,required" json:"predicate"`
+	Keys             [][]byte         `thrift:"1,required" json:"keys"`
+	ColumnParent     *ColumnParent    `thrift:"2,required" json:"column_parent"`
+	Predicate        *SlicePredicate  `thrift:"3,required" json:"predicate"`
 	ConsistencyLevel ConsistencyLevel `thrift:"4,required" json:"consistency_level"`
 }
 
 type CassandraMultigetCountResponse struct {
-	Value map[string]int32 `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Ue *UnavailableException `thrift:"2" json:"ue"`
-	Te *TimedOutException `thrift:"3" json:"te"`
+	Value map[string]int32         `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException `thrift:"1" json:"ire"`
+	Ue    *UnavailableException    `thrift:"2" json:"ue"`
+	Te    *TimedOutException       `thrift:"3" json:"te"`
 }
 
 type CassandraMultigetSliceRequest struct {
-	Keys [][]byte `thrift:"1,required" json:"keys"`
-	ColumnParent *ColumnParent `thrift:"2,required" json:"column_parent"`
-	Predicate *SlicePredicate `thrift:"3,required" json:"predicate"`
+	Keys             [][]byte         `thrift:"1,required" json:"keys"`
+	ColumnParent     *ColumnParent    `thrift:"2,required" json:"column_parent"`
+	Predicate        *SlicePredicate  `thrift:"3,required" json:"predicate"`
 	ConsistencyLevel ConsistencyLevel `thrift:"4,required" json:"consistency_level"`
 }
 
 type CassandraMultigetSliceResponse struct {
 	Value map[string][]*ColumnOrSuperColumn `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Ue *UnavailableException `thrift:"2" json:"ue"`
-	Te *TimedOutException `thrift:"3" json:"te"`
+	Ire   *InvalidRequestException          `thrift:"1" json:"ire"`
+	Ue    *UnavailableException             `thrift:"2" json:"ue"`
+	Te    *TimedOutException                `thrift:"3" json:"te"`
 }
 
 type CassandraPrepareCqlQueryRequest struct {
-	Query []byte `thrift:"1,required" json:"query"`
+	Query       []byte      `thrift:"1,required" json:"query"`
 	Compression Compression `thrift:"2,required" json:"compression"`
 }
 
 type CassandraPrepareCqlQueryResponse struct {
-	Value *CqlPreparedResult `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
+	Value *CqlPreparedResult       `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException `thrift:"1" json:"ire"`
 }
 
 type CassandraRemoveRequest struct {
-	Key []byte `thrift:"1,required" json:"key"`
-	ColumnPath *ColumnPath `thrift:"2,required" json:"column_path"`
-	Timestamp int64 `thrift:"3,required" json:"timestamp"`
+	Key              []byte           `thrift:"1,required" json:"key"`
+	ColumnPath       *ColumnPath      `thrift:"2,required" json:"column_path"`
+	Timestamp        int64            `thrift:"3,required" json:"timestamp"`
 	ConsistencyLevel ConsistencyLevel `thrift:"4,required" json:"consistency_level"`
 }
 
 type CassandraRemoveResponse struct {
 	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Ue *UnavailableException `thrift:"2" json:"ue"`
-	Te *TimedOutException `thrift:"3" json:"te"`
+	Ue  *UnavailableException    `thrift:"2" json:"ue"`
+	Te  *TimedOutException       `thrift:"3" json:"te"`
 }
 
 type CassandraRemoveCounterRequest struct {
-	Key []byte `thrift:"1,required" json:"key"`
-	Path *ColumnPath `thrift:"2,required" json:"path"`
+	Key              []byte           `thrift:"1,required" json:"key"`
+	Path             *ColumnPath      `thrift:"2,required" json:"path"`
 	ConsistencyLevel ConsistencyLevel `thrift:"3,required" json:"consistency_level"`
 }
 
 type CassandraRemoveCounterResponse struct {
 	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Ue *UnavailableException `thrift:"2" json:"ue"`
-	Te *TimedOutException `thrift:"3" json:"te"`
+	Ue  *UnavailableException    `thrift:"2" json:"ue"`
+	Te  *TimedOutException       `thrift:"3" json:"te"`
 }
 
 type CassandraSetCqlVersionRequest struct {
@@ -1366,9 +1366,9 @@ type CassandraSystemAddColumnFamilyRequest struct {
 }
 
 type CassandraSystemAddColumnFamilyResponse struct {
-	Value string `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Sde *SchemaDisagreementException `thrift:"2" json:"sde"`
+	Value string                       `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException     `thrift:"1" json:"ire"`
+	Sde   *SchemaDisagreementException `thrift:"2" json:"sde"`
 }
 
 type CassandraSystemAddKeyspaceRequest struct {
@@ -1376,9 +1376,9 @@ type CassandraSystemAddKeyspaceRequest struct {
 }
 
 type CassandraSystemAddKeyspaceResponse struct {
-	Value string `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Sde *SchemaDisagreementException `thrift:"2" json:"sde"`
+	Value string                       `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException     `thrift:"1" json:"ire"`
+	Sde   *SchemaDisagreementException `thrift:"2" json:"sde"`
 }
 
 type CassandraSystemDropColumnFamilyRequest struct {
@@ -1386,9 +1386,9 @@ type CassandraSystemDropColumnFamilyRequest struct {
 }
 
 type CassandraSystemDropColumnFamilyResponse struct {
-	Value string `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Sde *SchemaDisagreementException `thrift:"2" json:"sde"`
+	Value string                       `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException     `thrift:"1" json:"ire"`
+	Sde   *SchemaDisagreementException `thrift:"2" json:"sde"`
 }
 
 type CassandraSystemDropKeyspaceRequest struct {
@@ -1396,9 +1396,9 @@ type CassandraSystemDropKeyspaceRequest struct {
 }
 
 type CassandraSystemDropKeyspaceResponse struct {
-	Value string `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Sde *SchemaDisagreementException `thrift:"2" json:"sde"`
+	Value string                       `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException     `thrift:"1" json:"ire"`
+	Sde   *SchemaDisagreementException `thrift:"2" json:"sde"`
 }
 
 type CassandraSystemUpdateColumnFamilyRequest struct {
@@ -1406,9 +1406,9 @@ type CassandraSystemUpdateColumnFamilyRequest struct {
 }
 
 type CassandraSystemUpdateColumnFamilyResponse struct {
-	Value string `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Sde *SchemaDisagreementException `thrift:"2" json:"sde"`
+	Value string                       `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException     `thrift:"1" json:"ire"`
+	Sde   *SchemaDisagreementException `thrift:"2" json:"sde"`
 }
 
 type CassandraSystemUpdateKeyspaceRequest struct {
@@ -1416,9 +1416,9 @@ type CassandraSystemUpdateKeyspaceRequest struct {
 }
 
 type CassandraSystemUpdateKeyspaceResponse struct {
-	Value string `thrift:"0" json:"value"`
-	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Sde *SchemaDisagreementException `thrift:"2" json:"sde"`
+	Value string                       `thrift:"0" json:"value"`
+	Ire   *InvalidRequestException     `thrift:"1" json:"ire"`
+	Sde   *SchemaDisagreementException `thrift:"2" json:"sde"`
 }
 
 type CassandraTruncateRequest struct {
@@ -1427,8 +1427,8 @@ type CassandraTruncateRequest struct {
 
 type CassandraTruncateResponse struct {
 	Ire *InvalidRequestException `thrift:"1" json:"ire"`
-	Ue *UnavailableException `thrift:"2" json:"ue"`
-	Te *TimedOutException `thrift:"3" json:"te"`
+	Ue  *UnavailableException    `thrift:"2" json:"ue"`
+	Te  *TimedOutException       `thrift:"3" json:"te"`
 }
 
 type CassandraClient struct {
@@ -1437,9 +1437,9 @@ type CassandraClient struct {
 
 func (s *CassandraClient) Add(Key []byte, ColumnParent *ColumnParent, Column *CounterColumn, ConsistencyLevel ConsistencyLevel) error {
 	req := &CassandraAddRequest{
-		Key: Key,
-		ColumnParent: ColumnParent,
-		Column: Column,
+		Key:              Key,
+		ColumnParent:     ColumnParent,
+		Column:           Column,
 		ConsistencyLevel: ConsistencyLevel,
 	}
 	res := &CassandraAddResponse{}
@@ -1459,7 +1459,7 @@ func (s *CassandraClient) Add(Key []byte, ColumnParent *ColumnParent, Column *Co
 
 func (s *CassandraClient) BatchMutate(MutationMap map[string]map[string][]*Mutation, ConsistencyLevel ConsistencyLevel) error {
 	req := &CassandraBatchMutateRequest{
-		MutationMap: MutationMap,
+		MutationMap:      MutationMap,
 		ConsistencyLevel: ConsistencyLevel,
 	}
 	res := &CassandraBatchMutateResponse{}
@@ -1478,8 +1478,7 @@ func (s *CassandraClient) BatchMutate(MutationMap map[string]map[string][]*Mutat
 }
 
 func (s *CassandraClient) DescribeClusterName() (string, error) {
-	req := &CassandraDescribeClusterNameRequest{
-	}
+	req := &CassandraDescribeClusterNameRequest{}
 	res := &CassandraDescribeClusterNameResponse{}
 	err := s.Client.Call("describe_cluster_name", req, res)
 	return res.Value, err
@@ -1503,8 +1502,7 @@ func (s *CassandraClient) DescribeKeyspace(Keyspace string) (*KsDef, error) {
 }
 
 func (s *CassandraClient) DescribeKeyspaces() ([]*KsDef, error) {
-	req := &CassandraDescribeKeyspacesRequest{
-	}
+	req := &CassandraDescribeKeyspacesRequest{}
 	res := &CassandraDescribeKeyspacesResponse{}
 	err := s.Client.Call("describe_keyspaces", req, res)
 	if err == nil {
@@ -1517,8 +1515,7 @@ func (s *CassandraClient) DescribeKeyspaces() ([]*KsDef, error) {
 }
 
 func (s *CassandraClient) DescribePartitioner() (string, error) {
-	req := &CassandraDescribePartitionerRequest{
-	}
+	req := &CassandraDescribePartitionerRequest{}
 	res := &CassandraDescribePartitionerResponse{}
 	err := s.Client.Call("describe_partitioner", req, res)
 	return res.Value, err
@@ -1540,8 +1537,7 @@ func (s *CassandraClient) DescribeRing(Keyspace string) ([]*TokenRange, error) {
 }
 
 func (s *CassandraClient) DescribeSchemaVersions() (map[string][]string, error) {
-	req := &CassandraDescribeSchemaVersionsRequest{
-	}
+	req := &CassandraDescribeSchemaVersionsRequest{}
 	res := &CassandraDescribeSchemaVersionsResponse{}
 	err := s.Client.Call("describe_schema_versions", req, res)
 	if err == nil {
@@ -1554,8 +1550,7 @@ func (s *CassandraClient) DescribeSchemaVersions() (map[string][]string, error) 
 }
 
 func (s *CassandraClient) DescribeSnitch() (string, error) {
-	req := &CassandraDescribeSnitchRequest{
-	}
+	req := &CassandraDescribeSnitchRequest{}
 	res := &CassandraDescribeSnitchResponse{}
 	err := s.Client.Call("describe_snitch", req, res)
 	return res.Value, err
@@ -1563,9 +1558,9 @@ func (s *CassandraClient) DescribeSnitch() (string, error) {
 
 func (s *CassandraClient) DescribeSplits(CfName string, StartToken string, EndToken string, KeysPerSplit int32) ([]string, error) {
 	req := &CassandraDescribeSplitsRequest{
-		CfName: CfName,
-		StartToken: StartToken,
-		EndToken: EndToken,
+		CfName:       CfName,
+		StartToken:   StartToken,
+		EndToken:     EndToken,
 		KeysPerSplit: KeysPerSplit,
 	}
 	res := &CassandraDescribeSplitsResponse{}
@@ -1580,8 +1575,7 @@ func (s *CassandraClient) DescribeSplits(CfName string, StartToken string, EndTo
 }
 
 func (s *CassandraClient) DescribeTokenMap() (map[string]string, error) {
-	req := &CassandraDescribeTokenMapRequest{
-	}
+	req := &CassandraDescribeTokenMapRequest{}
 	res := &CassandraDescribeTokenMapResponse{}
 	err := s.Client.Call("describe_token_map", req, res)
 	if err == nil {
@@ -1594,8 +1588,7 @@ func (s *CassandraClient) DescribeTokenMap() (map[string]string, error) {
 }
 
 func (s *CassandraClient) DescribeVersion() (string, error) {
-	req := &CassandraDescribeVersionRequest{
-	}
+	req := &CassandraDescribeVersionRequest{}
 	res := &CassandraDescribeVersionResponse{}
 	err := s.Client.Call("describe_version", req, res)
 	return res.Value, err
@@ -1603,7 +1596,7 @@ func (s *CassandraClient) DescribeVersion() (string, error) {
 
 func (s *CassandraClient) ExecuteCqlQuery(Query []byte, Compression Compression) (*CqlResult, error) {
 	req := &CassandraExecuteCqlQueryRequest{
-		Query: Query,
+		Query:       Query,
 		Compression: Compression,
 	}
 	res := &CassandraExecuteCqlQueryResponse{}
@@ -1647,8 +1640,8 @@ func (s *CassandraClient) ExecutePreparedCqlQuery(ItemId int32, Values [][]byte)
 
 func (s *CassandraClient) Get(Key []byte, ColumnPath *ColumnPath, ConsistencyLevel ConsistencyLevel) (*ColumnOrSuperColumn, error) {
 	req := &CassandraGetRequest{
-		Key: Key,
-		ColumnPath: ColumnPath,
+		Key:              Key,
+		ColumnPath:       ColumnPath,
 		ConsistencyLevel: ConsistencyLevel,
 	}
 	res := &CassandraGetResponse{}
@@ -1670,9 +1663,9 @@ func (s *CassandraClient) Get(Key []byte, ColumnPath *ColumnPath, ConsistencyLev
 
 func (s *CassandraClient) GetCount(Key []byte, ColumnParent *ColumnParent, Predicate *SlicePredicate, ConsistencyLevel ConsistencyLevel) (int32, error) {
 	req := &CassandraGetCountRequest{
-		Key: Key,
-		ColumnParent: ColumnParent,
-		Predicate: Predicate,
+		Key:              Key,
+		ColumnParent:     ColumnParent,
+		Predicate:        Predicate,
 		ConsistencyLevel: ConsistencyLevel,
 	}
 	res := &CassandraGetCountResponse{}
@@ -1692,9 +1685,9 @@ func (s *CassandraClient) GetCount(Key []byte, ColumnParent *ColumnParent, Predi
 
 func (s *CassandraClient) GetIndexedSlices(ColumnParent *ColumnParent, IndexClause *IndexClause, ColumnPredicate *SlicePredicate, ConsistencyLevel ConsistencyLevel) ([]*KeySlice, error) {
 	req := &CassandraGetIndexedSlicesRequest{
-		ColumnParent: ColumnParent,
-		IndexClause: IndexClause,
-		ColumnPredicate: ColumnPredicate,
+		ColumnParent:     ColumnParent,
+		IndexClause:      IndexClause,
+		ColumnPredicate:  ColumnPredicate,
 		ConsistencyLevel: ConsistencyLevel,
 	}
 	res := &CassandraGetIndexedSlicesResponse{}
@@ -1714,9 +1707,9 @@ func (s *CassandraClient) GetIndexedSlices(ColumnParent *ColumnParent, IndexClau
 
 func (s *CassandraClient) GetPagedSlice(ColumnFamily string, Range *KeyRange, StartColumn []byte, ConsistencyLevel ConsistencyLevel) ([]*KeySlice, error) {
 	req := &CassandraGetPagedSliceRequest{
-		ColumnFamily: ColumnFamily,
-		Range: Range,
-		StartColumn: StartColumn,
+		ColumnFamily:     ColumnFamily,
+		Range:            Range,
+		StartColumn:      StartColumn,
 		ConsistencyLevel: ConsistencyLevel,
 	}
 	res := &CassandraGetPagedSliceResponse{}
@@ -1736,9 +1729,9 @@ func (s *CassandraClient) GetPagedSlice(ColumnFamily string, Range *KeyRange, St
 
 func (s *CassandraClient) GetRangeSlices(ColumnParent *ColumnParent, Predicate *SlicePredicate, Range *KeyRange, ConsistencyLevel ConsistencyLevel) ([]*KeySlice, error) {
 	req := &CassandraGetRangeSlicesRequest{
-		ColumnParent: ColumnParent,
-		Predicate: Predicate,
-		Range: Range,
+		ColumnParent:     ColumnParent,
+		Predicate:        Predicate,
+		Range:            Range,
 		ConsistencyLevel: ConsistencyLevel,
 	}
 	res := &CassandraGetRangeSlicesResponse{}
@@ -1758,9 +1751,9 @@ func (s *CassandraClient) GetRangeSlices(ColumnParent *ColumnParent, Predicate *
 
 func (s *CassandraClient) GetSlice(Key []byte, ColumnParent *ColumnParent, Predicate *SlicePredicate, ConsistencyLevel ConsistencyLevel) ([]*ColumnOrSuperColumn, error) {
 	req := &CassandraGetSliceRequest{
-		Key: Key,
-		ColumnParent: ColumnParent,
-		Predicate: Predicate,
+		Key:              Key,
+		ColumnParent:     ColumnParent,
+		Predicate:        Predicate,
 		ConsistencyLevel: ConsistencyLevel,
 	}
 	res := &CassandraGetSliceResponse{}
@@ -1780,9 +1773,9 @@ func (s *CassandraClient) GetSlice(Key []byte, ColumnParent *ColumnParent, Predi
 
 func (s *CassandraClient) Insert(Key []byte, ColumnParent *ColumnParent, Column *Column, ConsistencyLevel ConsistencyLevel) error {
 	req := &CassandraInsertRequest{
-		Key: Key,
-		ColumnParent: ColumnParent,
-		Column: Column,
+		Key:              Key,
+		ColumnParent:     ColumnParent,
+		Column:           Column,
 		ConsistencyLevel: ConsistencyLevel,
 	}
 	res := &CassandraInsertResponse{}
@@ -1819,9 +1812,9 @@ func (s *CassandraClient) Login(AuthRequest *AuthenticationRequest) error {
 
 func (s *CassandraClient) MultigetCount(Keys [][]byte, ColumnParent *ColumnParent, Predicate *SlicePredicate, ConsistencyLevel ConsistencyLevel) (map[string]int32, error) {
 	req := &CassandraMultigetCountRequest{
-		Keys: Keys,
-		ColumnParent: ColumnParent,
-		Predicate: Predicate,
+		Keys:             Keys,
+		ColumnParent:     ColumnParent,
+		Predicate:        Predicate,
 		ConsistencyLevel: ConsistencyLevel,
 	}
 	res := &CassandraMultigetCountResponse{}
@@ -1841,9 +1834,9 @@ func (s *CassandraClient) MultigetCount(Keys [][]byte, ColumnParent *ColumnParen
 
 func (s *CassandraClient) MultigetSlice(Keys [][]byte, ColumnParent *ColumnParent, Predicate *SlicePredicate, ConsistencyLevel ConsistencyLevel) (map[string][]*ColumnOrSuperColumn, error) {
 	req := &CassandraMultigetSliceRequest{
-		Keys: Keys,
-		ColumnParent: ColumnParent,
-		Predicate: Predicate,
+		Keys:             Keys,
+		ColumnParent:     ColumnParent,
+		Predicate:        Predicate,
 		ConsistencyLevel: ConsistencyLevel,
 	}
 	res := &CassandraMultigetSliceResponse{}
@@ -1863,7 +1856,7 @@ func (s *CassandraClient) MultigetSlice(Keys [][]byte, ColumnParent *ColumnParen
 
 func (s *CassandraClient) PrepareCqlQuery(Query []byte, Compression Compression) (*CqlPreparedResult, error) {
 	req := &CassandraPrepareCqlQueryRequest{
-		Query: Query,
+		Query:       Query,
 		Compression: Compression,
 	}
 	res := &CassandraPrepareCqlQueryResponse{}
@@ -1879,9 +1872,9 @@ func (s *CassandraClient) PrepareCqlQuery(Query []byte, Compression Compression)
 
 func (s *CassandraClient) Remove(Key []byte, ColumnPath *ColumnPath, Timestamp int64, ConsistencyLevel ConsistencyLevel) error {
 	req := &CassandraRemoveRequest{
-		Key: Key,
-		ColumnPath: ColumnPath,
-		Timestamp: Timestamp,
+		Key:              Key,
+		ColumnPath:       ColumnPath,
+		Timestamp:        Timestamp,
 		ConsistencyLevel: ConsistencyLevel,
 	}
 	res := &CassandraRemoveResponse{}
@@ -1901,8 +1894,8 @@ func (s *CassandraClient) Remove(Key []byte, ColumnPath *ColumnPath, Timestamp i
 
 func (s *CassandraClient) RemoveCounter(Key []byte, Path *ColumnPath, ConsistencyLevel ConsistencyLevel) error {
 	req := &CassandraRemoveCounterRequest{
-		Key: Key,
-		Path: Path,
+		Key:              Key,
+		Path:             Path,
 		ConsistencyLevel: ConsistencyLevel,
 	}
 	res := &CassandraRemoveCounterResponse{}

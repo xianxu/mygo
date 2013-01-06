@@ -1,9 +1,9 @@
 package tfe
 
 import (
-	"strings"
-	"log"
 	"gostrich"
+	"log"
+	"strings"
 )
 
 var (
