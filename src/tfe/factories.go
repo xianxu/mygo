@@ -14,6 +14,7 @@ type StaticHttpCluster struct {
 	Retries           int
 	ProberReq         interface{}
 	CacheResponseBody bool
+	PerHostStats      bool   // whether to report per host stats.
 
 	// http.Transport config
 	DisableKeepAlives   bool
@@ -32,13 +33,17 @@ func CreateStaticHttpCluster(config StaticHttpCluster) *rpcx.Cluster {
 	for i, h := range config.Hosts {
 		httpService := &HttpService{&http.Transport{}, h, config.CacheResponseBody}
 		withTimeout := &rpcx.ServiceWithTimeout{httpService, config.Timeout}
+		var reporter rpcx.ServiceReporter
+		if config.PerHostStats {
+			reporter = NewHttpStatsReporter(gostrich.AdminServer().GetStats().Scoped(config.Name).Scoped(h))
+		}
 		services[i] = rpcx.NewSupervisor(
 			h,
 			withTimeout,
 			func()float64{
 				return top.LatencyAvg()
 			},
-			NewHttpStatsReporter(gostrich.AdminServer().GetStats().Scoped(config.Name).Scoped(h)),
+			reporter,
 			config.ProberReq,
 			nil, // no need to recreate client since http.Transport does those alrady
 		)
