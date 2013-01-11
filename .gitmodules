@@ -1,0 +1,21 @@
+[submodule "src/github.com/xianxu/gotags"]
+	path = src/github.com/xianxu/gotags
+	url = git@github.com:xianxu/gotags.git
+[submodule "src/github.com/xianxu/gassandra"]
+	path = src/github.com/xianxu/gassandra
+	url = git@github.com:xianxu/gassandra.git
+[submodule "src/github.com/xianxu/tfe"]
+	path = src/github.com/xianxu/tfe
+	url = git@github.com:xianxu/tfe.git
+[submodule "src/github.com/xianxu/gostrich"]
+	path = src/github.com/xianxu/gostrich
+	url = git@github.com:xianxu/gostrich.git
+[submodule "src/github.com/xianxu/go-playground"]
+	path = src/github.com/xianxu/go-playground
+	url = git@github.com:xianxu/go-playground.git
+[submodule "src/github.com/xianxu/rpcx"]
+	path = src/github.com/xianxu/rpcx
+	url = git@github.com:xianxu/rpcx.git
+[submodule "src/github.com/samuel/go-thrift"]
+	path = src/github.com/samuel/go-thrift
+	url = git@github.com:samuel/go-thrift.git
