@@ -16,3 +16,6 @@
 [submodule "src/github.com/xianxu/rpcx"]
 	path = src/github.com/xianxu/rpcx
 	url = git@github.com:xianxu/rpcx.git
+[submodule "src/github.com/samuel/go-thrift"]
+	path = src/github.com/samuel/go-thrift
+	url = git@github.com:samuel/go-thrift.git
