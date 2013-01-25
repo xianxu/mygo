@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="6da8b3d6-38f6-413a-808b-b4f180ad9e63" name="Default" comment="" />
+    <list default="true" id="6da8b3d6-38f6-413a-808b-b4f180ad9e63" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/dictionaries/xx.xml" afterPath="$PROJECT_DIR$/.idea/dictionaries/xx.xml" />
+    </list>
     <ignored path="mygo.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/Dummy.txt" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1357935046597" ignored="false" />
+    <file path="/Dummy.txt" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358373003714" ignored="false" />
     <file path="/fragment.java" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1357922436993" ignored="false" />
     <file path="/gotags.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1357932077518" ignored="false" />
-    <file path="/balancer.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358183892345" ignored="false" />
+    <file path="/balancer.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359083126728" ignored="false" />
     <file path="/test.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358028708329" ignored="false" />
     <file path="/test1.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358028428199" ignored="false" />
     <file path="/main.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358030079803" ignored="false" />
@@ -18,6 +21,22 @@
     <file path="/httpservice.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358181080830" ignored="false" />
     <file path="/tfe.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358140183550" ignored="false" />
     <file path="/gostrich_test.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358183149928" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/lib/idea.jar!/standardSchemas/xinclude.xsd" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307854720" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/lib/idea.jar!/standardSchemas/XMLSchema-instance.xsd" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307854724" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/lib/idea.jar!/standardSchemas/xhtml1-transitional.xsd" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307854725" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/lib/idea.jar!/standardSchemas/xslt-1_0.xsd" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307854725" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/lib/idea.jar!/resources/relaxng.rng" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307854725" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/lib/idea.jar!/standardSchemas/catalog.xsd" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307854725" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/lib/idea.jar!/standardSchemas/XMLSchema.xsd" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307854725" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/lib/idea.jar!/standardSchemas/xhtml1-frameset.xsd" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307854725" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/lib/idea.jar!/standardSchemas/xhtml1-strict.xsd" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307854725" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/plugins/xpath/lib/xpath.jar!/org/intellij/lang/xpath/xslt/resources/documentation.xml" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307855176" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/plugins/xpath/lib/xpath.jar!/org/intellij/lang/xpath/xslt/resources/xslt-schema.xsd" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307855176" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/plugins/maven/lib/maven.jar!/schemas/maven-4.0.0.xsd" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307855176" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/lib/idea.jar!/standardSchemas/html5/xhtml5.xsd" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307855176" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/plugins/xpath/lib/xpath.jar!/org/intellij/lang/xpath/xslt/resources/documentation.xsl" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307855176" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/plugins/maven/lib/maven.jar!/schemas/settings-1.0.0.xsd" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307855176" ignored="false" />
+    <file path="$APPLICATION_HOME_DIR$/plugins/maven/lib/maven.jar!/schemas/profiles-1.0.0.xsd" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358307855176" ignored="false" />
     <option name="TRACKING_ENABLED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,82 +98,28 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
+      <file leaf-file-name="README.md" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gotags/README.md">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="15" column="0" selection-start="490" selection-end="490" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file leaf-file-name="README.md" pinned="false" current="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/rpcx/README.md">
+          <provider selected="true" editor-type-id="text-editor">
+            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+              <folding />
+            </state>
+          </provider>
+        </entry>
+      </file>
       <file leaf-file-name="balancer.go" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/rpcx/balancer.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="56" column="97" selection-start="2103" selection-end="2103" vertical-scroll-proportion="0.29685158">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="service.go" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gassandra/service.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="58" column="66" selection-start="1414" selection-end="1414" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="factories.go" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/tfe/factories.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="34" column="35" selection-start="925" selection-end="925" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="httpservice.go" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/tfe/httpservice.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="28" column="64" selection-start="738" selection-end="738" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="tfe.go" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/tfe/tfe.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="146" column="37" selection-start="3813" selection-end="3813" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="gostrich.go" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="27" column="64" selection-start="581" selection-end="581" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="gostrich_test.go" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich_test.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="36" column="23" selection-start="854" selection-end="854" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="testing.go" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../go/src/pkg/testing/testing.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="234" column="17" selection-start="8184" selection-end="8184" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="tick.go" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/../go/src/pkg/time/tick.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="10" column="5" selection-start="286" selection-end="286" vertical-scroll-proportion="0.0">
+            <state line="593" column="25" selection-start="18129" selection-end="18129" vertical-scroll-proportion="0.004255319">
               <folding />
             </state>
           </provider>
@@ -216,6 +181,9 @@
             <id>Data flow issues</id>
           </State>
           <State>
+            <id>Error handling</id>
+          </State>
+          <State>
             <id>GPath inspectionsGroovy</id>
           </State>
           <State>
@@ -241,9 +209,6 @@
           </State>
           <State>
             <id>Probable bugsGroovy</id>
-          </State>
-          <State>
-            <id>Scala: General</id>
           </State>
           <State>
             <id>UI Form Problems</id>
@@ -286,264 +251,11 @@
       <sortByType />
     </navigator>
     <panes>
+      <pane id="PackagesPane" />
       <pane id="Scope" />
       <pane id="ProjectPane">
-        <subPane>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="lots-of-go" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="github.com" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="xianxu" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="tfe" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="github.com" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="xianxu" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="rpcx" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="github.com" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="xianxu" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="gotags" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="github.com" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="xianxu" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="gostrich" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="github.com" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="xianxu" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="go-playground" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="github.com" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="xianxu" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="go-playground" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="tweetbutton" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="github.com" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="xianxu" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="gassandra" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-          <PATH>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="mygo" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="src" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-            <PATH_ELEMENT>
-              <option name="myItemId" value="github.com" />
-              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.PsiDirectoryNode" />
-            </PATH_ELEMENT>
-          </PATH>
-        </subPane>
+        <subPane />
       </pane>
-      <pane id="PackagesPane" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -552,7 +264,7 @@
     <property name="project.structure.proportion" value="0.15" />
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="recentsLimit" value="5" />
-    <property name="options.lastSelected" value="reference.settingsdialog.IDE.editor.colors.General" />
+    <property name="options.lastSelected" value="editor.preferences.appearance" />
     <property name="MemberChooser.sorted" value="false" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="GoToClass.includeJavaFiles" value="false" />
@@ -774,7 +486,7 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.2495935" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2495935" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -844,114 +556,88 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/src/lots-of-go/main.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="13" column="12" selection-start="500" selection-end="500" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/samuel/go-thrift/client.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="36" column="67" selection-start="986" selection-end="986" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../go/src/pkg/net/rpc/client.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="115" column="0" selection-start="2952" selection-end="2952" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="115" column="0" selection-start="2952" selection-end="2952" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gotags/gotags.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="120" column="0" selection-start="2766" selection-end="2766" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="120" column="0" selection-start="2766" selection-end="2766" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/go-playground/tweetbutton/tweetbutton.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="109" column="24" selection-start="2794" selection-end="2794" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/tfe/tfe.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="146" column="37" selection-start="3813" selection-end="3813" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="109" column="24" selection-start="2794" selection-end="2794" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../go/src/pkg/sync/atomic/doc.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="57" column="5" selection-start="2239" selection-end="2239" vertical-scroll-proportion="0.33235294">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../go/src/pkg/time/tick.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="10" column="5" selection-start="286" selection-end="286" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../go/src/pkg/testing/testing.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="234" column="17" selection-start="8184" selection-end="8184" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gassandra/service.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="58" column="66" selection-start="1414" selection-end="1414" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/tfe/factories.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="34" column="35" selection-start="925" selection-end="925" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/tfe/httpservice.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="28" column="64" selection-start="738" selection-end="738" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="57" column="5" selection-start="2239" selection-end="2239" vertical-scroll-proportion="0.33235294" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../go/src/pkg/math/rand/rand.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="148" column="5" selection-start="4404" selection-end="4404" vertical-scroll-proportion="0.8088235">
-          <folding />
-        </state>
+        <state line="148" column="5" selection-start="4404" selection-end="4404" vertical-scroll-proportion="0.8088235" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../go/src/pkg/testing/testing.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="248" column="35" selection-start="8608" selection-end="8608" vertical-scroll-proportion="0.87055475" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="36" column="23" selection-start="854" selection-end="854" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="36" column="23" selection-start="854" selection-end="854" vertical-scroll-proportion="0.025604552" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="27" column="64" selection-start="581" selection-end="581" vertical-scroll-proportion="0.0">
+        <state line="27" column="64" selection-start="581" selection-end="581" vertical-scroll-proportion="0.026086956" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/tfe/tfe.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="146" column="38" selection-start="3814" selection-end="3814" vertical-scroll-proportion="0.025604552" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/tfe/httpservice.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="28" column="69" selection-start="743" selection-end="743" vertical-scroll-proportion="0.025604552" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/tfe/factories.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="34" column="36" selection-start="926" selection-end="926" vertical-scroll-proportion="0.38549075" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/../go/src/pkg/time/tick.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="10" column="5" selection-start="286" selection-end="286" vertical-scroll-proportion="0.025604552" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gassandra/service.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="62" column="25" selection-start="1523" selection-end="1523" vertical-scroll-proportion="0.38549075" />
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gotags/README.md">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="15" column="0" selection-start="490" selection-end="490" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/rpcx/README.md">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/rpcx/balancer.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="56" column="97" selection-start="2103" selection-end="2103" vertical-scroll-proportion="0.29685158">
+        <state line="593" column="25" selection-start="18129" selection-end="18129" vertical-scroll-proportion="0.004255319">
           <folding />
         </state>
       </provider>
