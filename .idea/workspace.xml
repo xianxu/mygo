@@ -2,20 +2,22 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6da8b3d6-38f6-413a-808b-b4f180ad9e63" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/github.com/xianxu/gostrich" afterPath="$PROJECT_DIR$/src/github.com/xianxu/gostrich" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/github.com/xianxu/rpcx" afterPath="$PROJECT_DIR$/src/github.com/xianxu/rpcx" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="mygo.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/Dummy.txt" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359093591423" ignored="false" />
+    <file path="/Dummy.txt" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359590122880" ignored="false" />
     <file path="/fragment.java" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1357922436993" ignored="false" />
     <file path="/gotags.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1357932077518" ignored="false" />
-    <file path="/balancer.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359136585404" ignored="false" />
+    <file path="/balancer.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359706190552" ignored="false" />
     <file path="/test.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358028708329" ignored="false" />
     <file path="/test1.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358028428199" ignored="false" />
     <file path="/main.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358030079803" ignored="false" />
     <file path="/service.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359136821822" ignored="false" />
-    <file path="/gostrich.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359137073920" ignored="false" />
-    <file path="/tweetbutton.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359136925355" ignored="false" />
+    <file path="/gostrich.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359139428430" ignored="false" />
+    <file path="/tweetbutton.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359705180596" ignored="false" />
     <file path="/factories.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358140235795" ignored="false" />
     <file path="/httpservice.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358181080830" ignored="false" />
     <file path="/tfe.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358140183550" ignored="false" />
@@ -53,6 +55,7 @@
     <disable_hints />
   </component>
   <component name="DebuggerManager">
+    <ui_properties default_suspend_policy="SuspendAll" default_condition_enabled="true" />
     <breakpoint_any default_suspend_policy="SuspendAll" default_condition_enabled="true">
       <breakpoint>
         <option name="NOTIFY_CAUGHT" value="true" />
@@ -87,7 +90,6 @@
         <option name="LOG_MESSAGE" value="" />
       </breakpoint>
     </breakpoint_any>
-    <ui_properties default_suspend_policy="SuspendAll" default_condition_enabled="true" />
     <breakpoint_rules />
     <ui_properties />
   </component>
@@ -97,10 +99,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="balancer.go" pinned="false" current="false" current-in-tab="false">
+      <file leaf-file-name="balancer.go" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/rpcx/balancer.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="14" column="0" selection-start="132" selection-end="132" vertical-scroll-proportion="0.0">
+            <state line="43" column="11" selection-start="1366" selection-end="1366" vertical-scroll-proportion="0.81702125">
               <folding />
             </state>
           </provider>
@@ -109,7 +111,7 @@
       <file leaf-file-name="service.go" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gassandra/service.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="28" column="0" selection-start="528" selection-end="528" vertical-scroll-proportion="0.0">
+            <state line="18" column="31" selection-start="364" selection-end="364" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -118,16 +120,16 @@
       <file leaf-file-name="tweetbutton.go" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/go-playground/tweetbutton/tweetbutton.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="38" column="0" selection-start="1232" selection-end="1232" vertical-scroll-proportion="0.0">
+            <state line="135" column="4" selection-start="3615" selection-end="3615" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="gostrich.go" pinned="false" current="true" current-in-tab="true">
+      <file leaf-file-name="gostrich.go" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="775" column="0" selection-start="17941" selection-end="17941" vertical-scroll-proportion="0.97021276">
+            <state line="716" column="8" selection-start="16747" selection-end="16747" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -159,10 +161,10 @@
         <option value="$PROJECT_DIR$/src/github.com/xianxu/tfe/factories.go" />
         <option value="$PROJECT_DIR$/src/github.com/xianxu/tfe/httpservice.go" />
         <option value="$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich_test.go" />
-        <option value="$PROJECT_DIR$/src/github.com/xianxu/rpcx/balancer.go" />
         <option value="$PROJECT_DIR$/src/github.com/xianxu/gassandra/service.go" />
-        <option value="$PROJECT_DIR$/src/github.com/xianxu/go-playground/tweetbutton/tweetbutton.go" />
         <option value="$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go" />
+        <option value="$PROJECT_DIR$/src/github.com/xianxu/go-playground/tweetbutton/tweetbutton.go" />
+        <option value="$PROJECT_DIR$/src/github.com/xianxu/rpcx/balancer.go" />
       </list>
     </option>
   </component>
@@ -180,13 +182,37 @@
             <id />
           </State>
           <State>
+            <id>Abstraction issues</id>
+          </State>
+          <State>
             <id>Android Lint</id>
+          </State>
+          <State>
+            <id>Assignment issuesGroovy</id>
+          </State>
+          <State>
+            <id>Bitwise operation issues</id>
+          </State>
+          <State>
+            <id>Class structure</id>
+          </State>
+          <State>
+            <id>Code maturity issues</id>
           </State>
           <State>
             <id>Code style issues</id>
           </State>
           <State>
+            <id>Control FlowGroovy</id>
+          </State>
+          <State>
+            <id>Control flow issues</id>
+          </State>
+          <State>
             <id>Data flow issues</id>
+          </State>
+          <State>
+            <id>Declaration redundancy</id>
           </State>
           <State>
             <id>Error handling</id>
@@ -195,13 +221,25 @@
             <id>GPath inspectionsGroovy</id>
           </State>
           <State>
+            <id>General</id>
+          </State>
+          <State>
             <id>Groovy</id>
+          </State>
+          <State>
+            <id>IDEA Platform Inspections</id>
+          </State>
+          <State>
+            <id>Internationalization issues</id>
+          </State>
+          <State>
+            <id>J2ME issues</id>
           </State>
           <State>
             <id>JUnit issues</id>
           </State>
           <State>
-            <id>Naming ConventionsGroovy</id>
+            <id>Java language level migration aids</id>
           </State>
           <State>
             <id>Naming conventions</id>
@@ -210,19 +248,43 @@
             <id>Numeric issues</id>
           </State>
           <State>
+            <id>Performance issues</id>
+          </State>
+          <State>
             <id>Plugin DevKit</id>
+          </State>
+          <State>
+            <id>Potentially confusing code constructsGroovy</id>
           </State>
           <State>
             <id>Probable bugs</id>
           </State>
           <State>
-            <id>Probable bugsGroovy</id>
+            <id>Properties Files</id>
+          </State>
+          <State>
+            <id>Resource management issues</id>
+          </State>
+          <State>
+            <id>Serialization issues</id>
+          </State>
+          <State>
+            <id>TestNG</id>
+          </State>
+          <State>
+            <id>Threading issues</id>
+          </State>
+          <State>
+            <id>Threading issuesGroovy</id>
           </State>
           <State>
             <id>UI Form Problems</id>
           </State>
           <State>
-            <id>XPath</id>
+            <id>Validity issuesGroovy</id>
+          </State>
+          <State>
+            <id>Visibility issues</id>
           </State>
         </expanded-state>
         <selected-state>
@@ -266,18 +328,18 @@
     <property name="project.structure.proportion" value="0.15" />
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="recentsLimit" value="5" />
-    <property name="options.lastSelected" value="editor.preferences.appearance" />
+    <property name="options.lastSelected" value="editor.preferences.completion" />
     <property name="MemberChooser.sorted" value="false" />
     <property name="project.structure.side.proportion" value="0.2" />
     <property name="GoToClass.includeJavaFiles" value="false" />
     <property name="MemberChooser.copyJavadoc" value="false" />
     <property name="GoToClass.toSaveIncludeLibraries" value="false" />
     <property name="restartRequiresConfirmation" value="true" />
-    <property name="FullScreen" value="false" />
     <property name="MemberChooser.showClasses" value="true" />
+    <property name="FullScreen" value="false" />
     <property name="GoToClass.includeLibraries" value="false" />
-    <property name="options.searchVisible" value="true" />
     <property name="options.splitter.details.proportions" value="0.2" />
+    <property name="options.searchVisible" value="true" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -289,6 +351,12 @@
     </key>
   </component>
   <component name="RunManager" selected="Go Application.gotags.go">
+    <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType" factoryName="Plugin">
+      <module name="" />
+      <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m" />
+      <option name="PROGRAM_PARAMETERS" />
+      <method />
+    </configuration>
     <configuration default="true" type="GoApplicationRunConfiguration" factoryName="Go Application">
       <option name="name" value="Go application" />
       <option name="saveOutputToFile" value="false" />
@@ -298,12 +366,6 @@
       <option name="scriptArguments" />
       <option name="workDir" value="$PROJECT_DIR$" />
       <module name="" />
-      <method />
-    </configuration>
-    <configuration default="true" type="#org.jetbrains.idea.devkit.run.PluginConfigurationType" factoryName="Plugin">
-      <module name="" />
-      <option name="VM_PARAMETERS" value="-Xmx512m -Xms256m -XX:MaxPermSize=250m" />
-      <option name="PROGRAM_PARAMETERS" />
       <method />
     </configuration>
     <configuration default="true" type="AndroidTestRunConfigurationType" factoryName="Android Tests">
@@ -331,19 +393,6 @@
       <option name="PORT" value="5005" />
       <method />
     </configuration>
-    <configuration default="true" type="Applet" factoryName="Applet">
-      <module name="" />
-      <option name="MAIN_CLASS_NAME" />
-      <option name="HTML_FILE_NAME" />
-      <option name="HTML_USED" value="false" />
-      <option name="WIDTH" value="400" />
-      <option name="HEIGHT" value="300" />
-      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
-      <option name="VM_PARAMETERS" />
-      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
-      <option name="ALTERNATIVE_JRE_PATH" />
-      <method />
-    </configuration>
     <configuration default="true" type="TestNG" factoryName="TestNG">
       <module name="" />
       <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
@@ -369,6 +418,19 @@
       <envs />
       <properties />
       <listeners />
+      <method />
+    </configuration>
+    <configuration default="true" type="Applet" factoryName="Applet">
+      <module name="" />
+      <option name="MAIN_CLASS_NAME" />
+      <option name="HTML_FILE_NAME" />
+      <option name="HTML_USED" value="false" />
+      <option name="WIDTH" value="400" />
+      <option name="HEIGHT" value="300" />
+      <option name="POLICY_FILE" value="$APPLICATION_HOME_DIR$/bin/appletviewer.policy" />
+      <option name="VM_PARAMETERS" />
+      <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="false" />
+      <option name="ALTERNATIVE_JRE_PATH" />
       <method />
     </configuration>
     <configuration default="true" type="Application" factoryName="Application">
@@ -558,11 +620,6 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/../go/src/pkg/sync/atomic/doc.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="57" column="5" selection-start="2239" selection-end="2239" vertical-scroll-proportion="0.33235294" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../go/src/pkg/math/rand/rand.go">
       <provider selected="true" editor-type-id="text-editor">
         <state line="148" column="5" selection-start="4404" selection-end="4404" vertical-scroll-proportion="0.8088235" />
@@ -622,30 +679,37 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/rpcx/balancer.go">
+    <entry file="file://$PROJECT_DIR$/../go/src/pkg/builtin/builtin.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="14" column="0" selection-start="132" selection-end="132" vertical-scroll-proportion="0.0">
+        <state line="223" column="5" selection-start="9504" selection-end="9504" vertical-scroll-proportion="0.77021277">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gassandra/service.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="28" column="0" selection-start="528" selection-end="528" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/go-playground/tweetbutton/tweetbutton.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="38" column="0" selection-start="1232" selection-end="1232" vertical-scroll-proportion="0.0">
+        <state line="18" column="31" selection-start="364" selection-end="364" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="775" column="0" selection-start="17941" selection-end="17941" vertical-scroll-proportion="0.97021276">
+        <state line="716" column="8" selection-start="16747" selection-end="16747" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/go-playground/tweetbutton/tweetbutton.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="135" column="4" selection-start="3615" selection-end="3615" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/rpcx/balancer.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="43" column="11" selection-start="1366" selection-end="1366" vertical-scroll-proportion="0.81702125">
           <folding />
         </state>
       </provider>
