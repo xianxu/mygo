@@ -2,15 +2,11 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6da8b3d6-38f6-413a-808b-b4f180ad9e63" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/github.com/xianxu/go-playground" afterPath="$PROJECT_DIR$/src/github.com/xianxu/go-playground" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/github.com/xianxu/gostrich" afterPath="$PROJECT_DIR$/src/github.com/xianxu/gostrich" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/github.com/xianxu/rpcx" afterPath="$PROJECT_DIR$/src/github.com/xianxu/rpcx" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go" afterPath="$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="mygo.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/Dummy.txt" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359783653261" ignored="false" />
+    <file path="/Dummy.txt" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1360125299227" ignored="false" />
     <file path="/fragment.java" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1357922436993" ignored="false" />
     <file path="/gotags.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1357932077518" ignored="false" />
     <file path="/balancer.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359788465269" ignored="false" />
@@ -104,7 +100,7 @@
       <file leaf-file-name="balancer.go" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/rpcx/balancer.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="684" column="0" selection-start="22036" selection-end="22036" vertical-scroll-proportion="0.0">
+            <state line="739" column="0" selection-start="23386" selection-end="23386" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -122,7 +118,7 @@
       <file leaf-file-name="tweetbutton.go" pinned="false" current="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/go-playground/tweetbutton/tweetbutton.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="122" column="0" selection-start="3213" selection-end="3213" vertical-scroll-proportion="0.0">
+            <state line="123" column="0" selection-start="3214" selection-end="3214" vertical-scroll-proportion="0.0">
               <folding />
             </state>
           </provider>
@@ -131,7 +127,7 @@
       <file leaf-file-name="gostrich.go" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="28" column="18" selection-start="601" selection-end="601" vertical-scroll-proportion="0.56170213">
+            <state line="29" column="16" selection-start="634" selection-end="634" vertical-scroll-proportion="0.027298851">
               <folding />
             </state>
           </provider>
@@ -182,8 +178,8 @@
   <component name="ProjectFrameBounds">
     <option name="x" value="4" />
     <option name="y" value="22" />
-    <option name="width" value="1276" />
-    <option name="height" value="778" />
+    <option name="width" value="1362" />
+    <option name="height" value="746" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -545,8 +541,8 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="4" y="22" width="1276" height="778" extended-state="6" />
-    <editor active="true" />
+    <frame x="4" y="22" width="1362" height="746" extended-state="6" />
+    <editor active="false" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -673,23 +669,17 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../go/src/pkg/strings/strings.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="311" column="5" selection-start="7547" selection-end="7547" vertical-scroll-proportion="0.33333334">
-          <folding />
-        </state>
+        <state line="311" column="5" selection-start="7547" selection-end="7547" vertical-scroll-proportion="0.33333334" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../go/src/pkg/net/url/url.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="221" column="5" selection-start="4973" selection-end="4973" vertical-scroll-proportion="0.43546098">
-          <folding />
-        </state>
+        <state line="221" column="5" selection-start="4973" selection-end="4973" vertical-scroll-proportion="0.43546098" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../go/src/pkg/builtin/builtin.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="223" column="5" selection-start="9504" selection-end="9504" vertical-scroll-proportion="0.77021277">
-          <folding />
-        </state>
+        <state line="223" column="5" selection-start="9504" selection-end="9504" vertical-scroll-proportion="0.77021277" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gassandra/service.go">
@@ -708,21 +698,21 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/rpcx/balancer.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="684" column="0" selection-start="22036" selection-end="22036" vertical-scroll-proportion="0.0">
+        <state line="739" column="0" selection-start="23386" selection-end="23386" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/go-playground/tweetbutton/tweetbutton.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="122" column="0" selection-start="3213" selection-end="3213" vertical-scroll-proportion="0.0">
+        <state line="123" column="0" selection-start="3214" selection-end="3214" vertical-scroll-proportion="0.0">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="28" column="18" selection-start="601" selection-end="601" vertical-scroll-proportion="0.56170213">
+        <state line="29" column="16" selection-start="634" selection-end="634" vertical-scroll-proportion="0.027298851">
           <folding />
         </state>
       </provider>
