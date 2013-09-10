@@ -2,9 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6da8b3d6-38f6-413a-808b-b4f180ad9e63" name="Default" comment="">
+      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/github.com/golang/glog" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/github.com/xianxu/gostrich" afterPath="$PROJECT_DIR$/src/github.com/xianxu/gostrich" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mygo.iml" afterPath="$PROJECT_DIR$/mygo.iml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.gitmodules" afterPath="$PROJECT_DIR$/.gitmodules" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go" afterPath="$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="mygo.iws" />
@@ -17,7 +18,7 @@
     <file path="/test1.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358028428199" ignored="false" />
     <file path="/main.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358030079803" ignored="false" />
     <file path="/service.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359136821822" ignored="false" />
-    <file path="/gostrich.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359789033921" ignored="false" />
+    <file path="/gostrich.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1378855159073" ignored="false" />
     <file path="/tweetbutton.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359705180596" ignored="false" />
     <file path="/factories.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358140235795" ignored="false" />
     <file path="/httpservice.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1358181080830" ignored="false" />
@@ -105,7 +106,7 @@
       <file leaf-file-name="gostrich.go" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="56" column="35" selection-start="1744" selection-end="1744" vertical-scroll-proportion="0.6185567">
+            <state line="641" column="4" selection-start="14776" selection-end="14776" vertical-scroll-proportion="0.50073636">
               <folding />
             </state>
           </provider>
@@ -285,7 +286,7 @@
     <option name="STATE" value="0" />
   </component>
   <component name="ProjectView">
-    <navigator proportions="" version="1" splitterProportion="0.5">
+    <navigator currentView="ProjectPane" proportions="" version="1" splitterProportion="0.5">
       <flattenPackages />
       <showMembers />
       <showModules />
@@ -296,7 +297,20 @@
       <autoscrollFromSource />
       <sortByType />
     </navigator>
-    <panes />
+    <panes>
+      <pane id="PackagesPane" />
+      <pane id="ProjectPane">
+        <subPane>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="mygo" />
+              <option name="myItemType" value="com.intellij.ide.projectView.impl.nodes.ProjectViewProjectNode" />
+            </PATH_ELEMENT>
+          </PATH>
+        </subPane>
+      </pane>
+      <pane id="Scope" />
+    </panes>
   </component>
   <component name="PropertiesComponent">
     <property name="GoToFile.includeJavaFiles" value="false" />
@@ -529,7 +543,7 @@
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="true" content_ui="tabs" />
       <window_info id="Maven Projects" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="SLIDING" type="SLIDING" visible="false" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.2495935" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" weight="0.17235772" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
@@ -665,9 +679,16 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/tfe/tfe_server/tfe_server.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="43" column="0" selection-start="976" selection-end="976" vertical-scroll-proportion="0.76435935">
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="56" column="35" selection-start="1744" selection-end="1744" vertical-scroll-proportion="0.6185567">
+        <state line="641" column="4" selection-start="14776" selection-end="14776" vertical-scroll-proportion="0.50073636">
           <folding />
         </state>
       </provider>

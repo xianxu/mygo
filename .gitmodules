@@ -16,3 +16,6 @@
 [submodule "src/github.com/xianxu/rpcx"]
 	path = src/github.com/xianxu/rpcx
 	url = git@github.com:xianxu/rpcx.git
+[submodule "github.com/golang/glog"]
+	path = github.com/golang/glog
+	url = https://github.com/golang/glog.git
