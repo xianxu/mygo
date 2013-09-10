@@ -2,11 +2,14 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="6da8b3d6-38f6-413a-808b-b4f180ad9e63" name="Default" comment="">
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/src/github.com/xianxu/gostrich" afterPath="$PROJECT_DIR$/src/github.com/xianxu/gostrich" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/misc.xml" afterPath="$PROJECT_DIR$/.idea/misc.xml" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mygo.iml" afterPath="$PROJECT_DIR$/mygo.iml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
     </list>
     <ignored path="mygo.iws" />
     <ignored path=".idea/workspace.xml" />
-    <file path="/Dummy.txt" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1360125299227" ignored="false" />
+    <file path="/Dummy.txt" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1378847762018" ignored="false" />
     <file path="/fragment.java" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1357922436993" ignored="false" />
     <file path="/gotags.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1357932077518" ignored="false" />
     <file path="/balancer.go" changelist="6da8b3d6-38f6-413a-808b-b4f180ad9e63" time="1359788465269" ignored="false" />
@@ -60,6 +63,7 @@
         <option name="ENABLED" value="false" />
         <option name="LOG_ENABLED" value="false" />
         <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="REMOVE_AFTER_HIT" value="false" />
         <option name="SUSPEND_POLICY" value="SuspendAll" />
         <option name="SUSPEND" value="true" />
         <option name="COUNT_FILTER_ENABLED" value="false" />
@@ -76,6 +80,7 @@
         <option name="ENABLED" value="false" />
         <option name="LOG_ENABLED" value="false" />
         <option name="LOG_EXPRESSION_ENABLED" value="false" />
+        <option name="REMOVE_AFTER_HIT" value="false" />
         <option name="SUSPEND_POLICY" value="SuspendAll" />
         <option name="SUSPEND" value="true" />
         <option name="COUNT_FILTER_ENABLED" value="false" />
@@ -97,46 +102,10 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="balancer.go" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/rpcx/balancer.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="739" column="0" selection-start="23386" selection-end="23386" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="service.go" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gassandra/service.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="18" column="31" selection-start="364" selection-end="364" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="tweetbutton.go" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/go-playground/tweetbutton/tweetbutton.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="123" column="0" selection-start="3214" selection-end="3214" vertical-scroll-proportion="0.0">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
       <file leaf-file-name="gostrich.go" pinned="false" current="true" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go">
           <provider selected="true" editor-type-id="text-editor">
-            <state line="29" column="16" selection-start="634" selection-end="634" vertical-scroll-proportion="0.027298851">
-              <folding />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file leaf-file-name="gostrich_test.go" pinned="false" current="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich_test.go">
-          <provider selected="true" editor-type-id="text-editor">
-            <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+            <state line="56" column="35" selection-start="1744" selection-end="1744" vertical-scroll-proportion="0.6185567">
               <folding />
             </state>
           </provider>
@@ -178,8 +147,8 @@
   <component name="ProjectFrameBounds">
     <option name="x" value="4" />
     <option name="y" value="22" />
-    <option name="width" value="1362" />
-    <option name="height" value="746" />
+    <option name="width" value="1276" />
+    <option name="height" value="778" />
   </component>
   <component name="ProjectInspectionProfilesVisibleTreeState">
     <entry key="Project Default">
@@ -331,7 +300,7 @@
   </component>
   <component name="PropertiesComponent">
     <property name="GoToFile.includeJavaFiles" value="false" />
-    <property name="project.structure.last.edited" value="SDKs" />
+    <property name="project.structure.last.edited" value="Facets" />
     <property name="project.structure.proportion" value="0.15" />
     <property name="options.splitter.main.proportions" value="0.3" />
     <property name="recentsLimit" value="5" />
@@ -384,6 +353,7 @@
       <option name="PACKAGE_NAME" value="" />
       <option name="TARGET_SELECTION_MODE" value="EMULATOR" />
       <option name="PREFERRED_AVD" value="" />
+      <option name="USE_COMMAND_LINE" value="true" />
       <option name="COMMAND_LINE" value="" />
       <option name="WIPE_USER_DATA" value="false" />
       <option name="DISABLE_BOOT_ANIMATION" value="false" />
@@ -481,6 +451,7 @@
       <option name="DEPLOY" value="true" />
       <option name="TARGET_SELECTION_MODE" value="EMULATOR" />
       <option name="PREFERRED_AVD" value="" />
+      <option name="USE_COMMAND_LINE" value="true" />
       <option name="COMMAND_LINE" value="" />
       <option name="WIPE_USER_DATA" value="false" />
       <option name="DISABLE_BOOT_ANIMATION" value="false" />
@@ -541,13 +512,14 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="4" y="22" width="1362" height="746" extended-state="6" />
-    <editor active="false" />
+    <frame x="4" y="22" width="1276" height="778" extended-state="6" />
+    <editor active="true" />
     <layout>
       <window_info id="Changes" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="JetGradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Palette" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
+      <window_info id="SBT Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="8" side_tool="false" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
       <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
@@ -593,7 +565,7 @@
     <option name="SHOW_ONLY_CHANGED_IN_SELECTION_DIFF" value="true" />
     <option name="CHECK_COMMIT_MESSAGE_SPELLING" value="true" />
     <option name="DEFAULT_PATCH_EXTENSION" value="patch" />
-    <option name="SHORT_DIFF_HORISONTALLY" value="true" />
+    <option name="SHORT_DIFF_HORIZONTALLY" value="true" />
     <option name="SHORT_DIFF_EXTRA_LINES" value="2" />
     <option name="SOFT_WRAPS_IN_SHORT_DIFF" value="true" />
     <option name="INCLUDE_TEXT_INTO_PATCH" value="false" />
@@ -603,6 +575,10 @@
     <option name="SHOW_DIRTY_RECURSIVELY" value="false" />
     <option name="LIMIT_HISTORY" value="true" />
     <option name="MAXIMUM_HISTORY_ROWS" value="1000" />
+    <option name="UPDATE_FILTER_SCOPE_NAME" />
+    <option name="USE_COMMIT_MESSAGE_MARGIN" value="false" />
+    <option name="COMMIT_MESSAGE_MARGIN_SIZE" value="72" />
+    <option name="WRAP_WHEN_TYPING_REACHES_RIGHT_MARGIN" value="false" />
     <option name="FORCE_NON_EMPTY_COMMENT" value="false" />
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="false" />
     <option name="LAST_COMMIT_MESSAGE" />
@@ -616,6 +592,7 @@
     <option name="ACTIVE_VCS_NAME" />
     <option name="UPDATE_GROUP_BY_PACKAGES" value="false" />
     <option name="UPDATE_GROUP_BY_CHANGELIST" value="false" />
+    <option name="UPDATE_FILTER_BY_SCOPE" value="false" />
     <option name="SHOW_FILE_HISTORY_AS_TREE" value="false" />
     <option name="FILE_HISTORY_SPLITTER_PROPORTION" value="0.6" />
   </component>
@@ -627,6 +604,18 @@
     <option name="FILTER_TARGETS" value="false" />
   </component>
   <component name="editorHistoryManager">
+    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich_test.go">
+      <provider selected="true" editor-type-id="text-editor">
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" />
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/../go/src/pkg/math/rand/rand.go">
       <provider selected="true" editor-type-id="text-editor">
         <state line="148" column="5" selection-start="4404" selection-end="4404" vertical-scroll-proportion="0.8088235" />
@@ -637,34 +626,9 @@
         <state line="248" column="35" selection-start="8608" selection-end="8608" vertical-scroll-proportion="0.87055475" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/tfe/tfe.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="146" column="38" selection-start="3814" selection-end="3814" vertical-scroll-proportion="0.025604552" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/tfe/httpservice.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="28" column="69" selection-start="743" selection-end="743" vertical-scroll-proportion="0.025604552" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/tfe/factories.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="34" column="36" selection-start="926" selection-end="926" vertical-scroll-proportion="0.38549075" />
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/../go/src/pkg/time/tick.go">
       <provider selected="true" editor-type-id="text-editor">
         <state line="10" column="5" selection-start="286" selection-end="286" vertical-scroll-proportion="0.025604552" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gotags/README.md">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="15" column="0" selection-start="490" selection-end="490" vertical-scroll-proportion="0.0" />
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/rpcx/README.md">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/../go/src/pkg/strings/strings.go">
@@ -682,37 +646,28 @@
         <state line="223" column="5" selection-start="9504" selection-end="9504" vertical-scroll-proportion="0.77021277" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gassandra/service.go">
+    <entry file="file://$PROJECT_DIR$/../go/src/pkg/time/time.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="18" column="31" selection-start="364" selection-end="364" vertical-scroll-proportion="0.0">
+        <state line="760" column="5" selection-start="22019" selection-end="22019" vertical-scroll-proportion="0.3328424">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich_test.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
+        <state line="0" column="0" selection-start="0" selection-end="0" vertical-scroll-proportion="0.0" />
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/rpcx/balancer.go">
+    <entry file="file://$PROJECT_DIR$/../go/src/pkg/sync/mutex.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="739" column="0" selection-start="23386" selection-end="23386" vertical-scroll-proportion="0.0">
-          <folding />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/go-playground/tweetbutton/tweetbutton.go">
-      <provider selected="true" editor-type-id="text-editor">
-        <state line="123" column="0" selection-start="3214" selection-end="3214" vertical-scroll-proportion="0.0">
+        <state line="20" column="5" selection-start="717" selection-end="717" vertical-scroll-proportion="0.5891016">
           <folding />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/src/github.com/xianxu/gostrich/gostrich.go">
       <provider selected="true" editor-type-id="text-editor">
-        <state line="29" column="16" selection-start="634" selection-end="634" vertical-scroll-proportion="0.027298851">
+        <state line="56" column="35" selection-start="1744" selection-end="1744" vertical-scroll-proportion="0.6185567">
           <folding />
         </state>
       </provider>
@@ -768,7 +723,7 @@
       </state>
       <state key="JdkListConfigurable.UI">
         <settings>
-          <last-edited>Android 4.2 Platform</last-edited>
+          <last-edited>Go App Engine 1.8.4</last-edited>
           <splitter-proportions>
             <option name="proportions">
               <list>
@@ -785,7 +740,6 @@
             <option name="proportions">
               <list>
                 <option value="0.2" />
-                <option value="0.5" />
               </list>
             </option>
           </splitter-proportions>
